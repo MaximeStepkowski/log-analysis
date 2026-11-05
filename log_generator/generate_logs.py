@@ -1,112 +1,200 @@
 import json
+import argparse
 import random
 import time
 from datetime import datetime, timedelta
+from pathlib import Path
 
 # Configuration du fichier de sortie
-OUTPUT_FILE = "huge_system_logs_5.log"
-TOTAL_LINES = 50_000  # Modifiez ici pour ajuster le nombre de lignes (ex: 2 à 5 millions)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "logs"
+TOTAL_LINES = 1_000_000  # Nombre de lignes souhaité
 BATCH_SIZE = 50_000      # Écriture par blocs pour optimiser les I/O disque
+IO_BUFFER_SIZE = 1024 * 1024
 
-# Jeux de données pour la génération
-IP_POOL = [f"192.168.1.{i}" for i in range(1, 100)] + [f"10.0.0.{i}" for i in range(1, 50)]
-BLACKLISTED_IPS = ["192.168.1.66", "10.0.0.99", "172.16.0.4"] # Pour tester le Module 3 (frozenset)
-ATTACKER_IP = "192.168.1.200" # IP dédiée à la simulation d'attaque Brute-Force
 
-USERNAMES = ["admin", "alice", "bob", "charlie", "david", "guest", "service_account"]
-LOG_LEVELS = ["INFO", "WARNING", "ERROR", "CRITICAL"]
-LEVEL_WEIGHTS = [0.70, 0.18, 0.10, 0.02]  # Répartition réaliste des logs
+def get_output_file(
+    file_number: int = 1,
+    output_dir: Path = DEFAULT_OUTPUT_DIR,
+) -> Path:
+    """Construit le chemin d'un fichier de logs numéroté."""
+    if file_number < 1:
+        raise ValueError("Le numéro du fichier doit être supérieur ou égal à 1.")
 
-MESSAGES_TEMPLATES = [
-    "User authentication successful",
-    "Failed password attempt for user",
-    "Connection timed out after 3000ms",
-    "Database connection pool exhausted",
-    "File access granted to resource",
-    "Unauthorized access attempt detected"
+    return Path(output_dir) / f"logs_file_http_{file_number}.log"
+
+# --- JEUX DE DONNÉES HTTP ---
+IP_POOL = [f"192.168.1.{i}" for i in range(1, 100)] + [f"10.0.0.{i}" for i in range(1, 50)] + [f"172.16.0.{i}" for i in range(1, 30)]
+BLACKLISTED_IPS = ["192.168.1.66", "10.0.0.99", "172.16.0.4"]
+ALL_IPS = IP_POOL + BLACKLISTED_IPS
+# IP dédiée à la simulation d'attaque Web (Force Brute / Fuzzing)
+ATTACKER_IP = "192.168.1.200"
+
+HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"]
+METHOD_WEIGHTS = [0.65, 0.20, 0.08, 0.04, 0.02, 0.01]
+WEIGHTED_METHODS = [
+    method
+    for method, weight in zip(HTTP_METHODS, METHOD_WEIGHTS)
+    for _ in range(round(weight * 100))
 ]
 
-def generate_log_line(timestamp: str, corrupt_rate: float = 0.005) -> str:
+STATUS_CODES = [200, 201, 301, 304, 400, 401, 403, 404, 500, 502, 503]
+STATUS_WEIGHTS = [0.70, 0.08, 0.05, 0.05, 0.03, 0.02, 0.02, 0.03, 0.01, 0.005, 0.005]
+WEIGHTED_STATUS_CODES = [
+    status
+    for status, weight in zip(STATUS_CODES, STATUS_WEIGHTS)
+    for _ in range(round(weight * 1000))
+]
+
+ENDPOINTS = [
+    "/", "/index.html", "/api/v1/auth/login", "/api/v1/users",
+    "/api/v1/products", "/cart/checkout", "/static/js/main.js",
+    "/static/css/styles.css", "/images/logo.png", "/admin/dashboard",
+    "/api/v1/orders"
+]
+
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0",
+    "Python-urllib/3.10",
+    "curl/7.68.0",
+    "PostmanRuntime/7.32.3"
+]
+
+REFERERS = [
+    "-",
+    "https://www.google.com/",
+    "https://www.bing.com/",
+    "https://example.com/login",
+    "https://example.com/products"
+]
+FORMAT_TYPES = ["combined", "json", "kv"]
+FORMAT_WEIGHTS = [0.6, 0.3, 0.1]
+WEIGHTED_FORMAT_TYPES = [
+    format_type
+    for format_type, weight in zip(FORMAT_TYPES, FORMAT_WEIGHTS)
+    for _ in range(round(weight * 10))
+]
+
+
+def generate_http_log_line(
+    timestamp_dt: datetime,
+    corrupt_rate: float = 0.005,
+    empty_rate: float = 0.003,
+) -> str:
     """
-    Génère une ligne de log sous un format structuré ou semi-structuré.
-    Injecte un faible pourcentage de lignes corrompues/malformées (ex: 0.5%).
+    Génère une ligne de log HTTP.
+    Injecte :
+    - Des lignes vides ("") ou d'espaces ("   ").
+    - Des lignes corrompues/malformées.
+    - Des requêtes HTTP normales ou des comportements suspects.
     """
-    
+
+    # --- INJECTION DE LIGNES VIDES OU ESPACÉES ---
+    if random.random() < empty_rate:
+        empty_types = [
+            "",                                      # Ligne totalement vide
+            " ",                                     # Un seul espace
+            "           ",                           # Multiples espaces
+            "\t\t   "                                # Mélange de tabulations et d'espaces
+        ]
+        return random.choice(empty_types)
+
     # --- INJECTION DE LIGNES CORROMPUES ---
     if random.random() < corrupt_rate:
         corrupt_types = [
-            "",                                      # Ligne vide (pour tester filter(None, ...))
-            "   \n",                                 # Uniquement des espaces / saut de ligne
-            "CORRUPTED_DATA_NULL_BYTES_\x00\x00\x00",# Octets nuls ou binaire invalide
-            "2026-11-05 ERROR 192.168.1.1",          # Tronquée (manque des champs essentiels)
-            '{"level": "ERROR", "ip": ',             # JSON invalide / mal formé
-            "2026-99-99 99:99:99 INVALID_TIMESTAMP", # Horodatage absurde
+            "CORRUPTED_DATA_NULL_BYTES_\x00\x00\x00",
+            # Tronqué (manque status & bytes)
+            "192.168.1.1 - - [05/Nov/2026:12:00:00 +0000] \"GET / HTTP/1.1\"",
+            '{"timestamp": "2026-11-05T12:00:00Z", "ip": ',                   # JSON invalide
+            "2026-99-99 99:99:99 HTTP INVALID_TIMESTAMP",                     # Horodatage absurde
+            # Format brut sans IP/Date
+            "GET /admin/login HTTP/1.1 401 512"
         ]
         return random.choice(corrupt_types)
 
-    # --- NORMALE : SIMULATION D'ATTAQUE (1%) ---
+    # --- SIMULATION D'ATTAQUE (1%) ---
     if random.random() < 0.01:
         ip = ATTACKER_IP
-        user = "admin"
-        level = "ERROR"
-        msg = "Failed password attempt for user"
+        method = "POST"
+        endpoint = "/admin/login"
+        status = random.choice([401, 403])
+        bytes_sent = random.randint(150, 300)
+        user_agent = "Python-urllib/3.10"
+        referer = "-"
+        response_time_ms = random.randint(10, 50)
     else:
-        ip = random.choice(IP_POOL + BLACKLISTED_IPS)
-        user = random.choice(USERNAMES)
-        level = random.choices(LOG_LEVELS, weights=LEVEL_WEIGHTS)[0]
-        msg = random.choice(MESSAGES_TEMPLATES)
+        ip = random.choice(ALL_IPS)
+        method = random.choice(WEIGHTED_METHODS)
+        endpoint = random.choice(ENDPOINTS)
+        status = random.choice(WEIGHTED_STATUS_CODES)
+        bytes_sent = random.randint(
+            200, 15000) if status == 200 else random.randint(0, 500)
+        user_agent = random.choice(USER_AGENTS)
+        referer = random.choice(REFERERS)
+        response_time_ms = random.randint(5, 1200)
 
-    port = random.randint(1024, 65535)
-    proto = random.choice(["TCP", "UDP"])
+    http_version = "HTTP/1.1"
 
-    # --- NORMALE : VARIABILITÉ DE FORMAT ---
-    format_type = random.choices(["json", "kv", "raw"], weights=[0.6, 0.3, 0.1])[0]
+    # --- VARIABILITÉ DE FORMAT ---
+    format_type = random.choice(WEIGHTED_FORMAT_TYPES)
 
-    if format_type == "json":
+    if format_type == "combined":
+        # Format Nginx/Apache Combined Log: IP - - [Date] "METHOD URL PROTO" STATUS BYTES "REFERER" "USER-AGENT"
+        ts_combined = timestamp_dt.strftime("%d/%b/%Y:%H:%M:%S +0000")
+        return f'{ip} - - [{ts_combined}] "{method} {endpoint} {http_version}" {status} {bytes_sent} "{referer}" "{user_agent}"'
+
+    elif format_type == "json":
+        # Format JSON structuré pour Kibana / Loki
         payload = {
-            "timestamp": timestamp,
-            "level": level,
-            "ip": ip,
-            "port": port,
-            "protocol": proto,
-            "user": user,
-            "message": msg
+            "timestamp": timestamp_dt.isoformat() + "Z",
+            "remote_addr": ip,
+            "request_method": method,
+            "request_uri": endpoint,
+            "status": status,
+            "body_bytes_sent": bytes_sent,
+            "request_time_ms": response_time_ms,
+            "http_referrer": referer,
+            "http_user_agent": user_agent
         }
         return json.dumps(payload)
-    
-    elif format_type == "kv":
-        return f"{timestamp} | LEVEL={level} | CONNECTION=({ip},{port},{proto}) | USER={user} | MSG=\"{msg}\""
-    
-    else:
-        return f"{timestamp} {level} {ip}:{port} [{user}] - {msg}"
 
-def generate_huge_log_file(filename: str, total_lines: int):
+    else:
+        # Format Key-Value
+        ts_kv = timestamp_dt.strftime("%Y-%m-%d %H:%M:%S")
+        return f'time="{ts_kv}" client_ip={ip} method={method} path="{endpoint}" status={status} bytes={bytes_sent} duration_ms={response_time_ms} agent="{user_agent}"'
+
+
+def generate_huge_log_file(filename: str | Path, total_lines: int) -> None:
     """Génère le fichier de logs par lots (buffers) optimisés."""
-    print(f"Début de la génération de {total_lines:,} lignes dans '{filename}'...")
+    output_path = Path(filename)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"Début de la génération de {total_lines:,} logs HTTP dans '{filename}'...")
     start_time = time.time()
-    
-    current_date = datetime.now() - timedelta(days=7) # Commence il y a 7 jours
-    time_increment = timedelta(seconds=0.2) # ~5 logs par seconde
+
+    current_date = datetime.now() - timedelta(days=7)  # Commence il y a 7 jours
+    time_increment = timedelta(seconds=0.05)  # ~20 requêtes HTTP par seconde
 
     written_lines = 0
     buffer = []
 
-    with open(filename, "w", encoding="utf-8") as f:
+    with open(output_path, "w", encoding="utf-8", buffering=IO_BUFFER_SIZE) as f:
         for i in range(1, total_lines + 1):
             current_date += time_increment
-            ts_str = current_date.strftime("%Y-%m-%d %H:%M:%S")
-            
-            line = generate_log_line(ts_str)
+
+            line = generate_http_log_line(current_date)
             buffer.append(line + "\n")
 
-            # Écriture par blocs pour ne pas faire chauffer l'I/O ni charger la RAM
+            # Écriture par blocs pour limiter l'impact I/O et RAM
             if i % BATCH_SIZE == 0:
                 f.writelines(buffer)
                 buffer.clear()
                 written_lines = i
                 print(f"Progression : {written_lines:,} / {total_lines:,} lignes ({(written_lines/total_lines)*100:.1f}%)")
 
-        # Écriture des lignes restantes
+        # Écriture du reste du buffer
         if buffer:
             f.writelines(buffer)
 
@@ -115,4 +203,27 @@ def generate_huge_log_file(filename: str, total_lines: int):
 
 
 if __name__ == "__main__":
-    generate_huge_log_file(OUTPUT_FILE, TOTAL_LINES)
+    parser = argparse.ArgumentParser(description="Génère un fichier de logs HTTP.")
+    parser.add_argument(
+        "--number",
+        "-n",
+        type=int,
+        default=1,
+        help="Numéro du fichier (défaut : 1).",
+    )
+    parser.add_argument(
+        "--lines",
+        "-l",
+        type=int,
+        default=TOTAL_LINES,
+        help=f"Nombre de lignes (défaut : {TOTAL_LINES}).",
+    )
+    arguments = parser.parse_args()
+
+    try:
+        generate_huge_log_file(
+            get_output_file(arguments.number),
+            arguments.lines,
+        )
+    except ValueError as error:
+        raise SystemExit(f"Erreur : {error}") from error
