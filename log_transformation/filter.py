@@ -194,7 +194,7 @@ def filtering_by_keyword(
 # 9. FONCTION PRINCIPALE : PIPELINE DE FILTRAGE
 # ============================================================
 
-def filtrage_intelligent(
+def smart_filter(
     records: Iterable[Any],
     levels: set[str] | None = None,
     ip_blacklist: set[str] | None = None,
@@ -203,33 +203,33 @@ def filtrage_intelligent(
     keyword: str | None = None
 ) -> Iterator[dict]:
     """
-    Applique successivement tous les filtres.
+    Applique tous les critères de filtrage en un seul passage.
 
     Le traitement reste paresseux : les logs ne sont
     pas stockés intégralement en mémoire.
     """
 
-    """
-    # Etape 1 : suppression des entrées vides
-    logs = delete_empty_entries(logs)
+    selected_levels = VALID_LEVELS if levels is None else levels
+    blocked_ips = set() if ip_blacklist is None else ip_blacklist
+    blocked_users = set() if excluded_users is None else excluded_users
+    selected_protocols = VALID_PROTOCOLS if protocols is None else protocols
+    normalized_keyword = keyword.lower() if keyword else None
 
-    # Etape 2 : suppression des structures invalides
-    logs = filter(valid_log, logs)
-    """
+    def matches(log: dict) -> bool:
+        if log["level"] not in selected_levels:
+            return False
+        if log["connection"][0] in blocked_ips:
+            return False
+        if log["user"] in blocked_users:
+            return False
+        if log["connection"][2] not in selected_protocols:
+            return False
 
-    # Etape 3 : filtrage des niveaux de gravité
-    logs = filtering_by_level(records, levels)
+        if normalized_keyword is None:
+            return True
 
-    # Etape 4 : exclusion des IP blacklistées
-    logs = filtering_by_ip(records, ip_blacklist)
+        payload = log["payload"]
+        message = payload.get("message", "") if isinstance(payload, dict) else payload
+        return normalized_keyword in str(message).lower()
 
-    # Etape 5 : exclusion de certains utilisateurs
-    logs = filtering_by_user(records, excluded_users)
-
-    # Etape 6 : filtrage des protocoles
-    logs = filtering_by_protocol(records, protocols)
-
-    # Etape 7 : recherche éventuelle d'un mot-clé
-    logs = filtering_by_keyword(records, keyword)
-
-    return logs
+    return filter(matches, records)
