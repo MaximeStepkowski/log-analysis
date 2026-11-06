@@ -69,6 +69,8 @@ REFERERS = [
     "https://example.com/login",
     "https://example.com/products"
 ]
+CLIENT_PORT_MIN = 1024
+CLIENT_PORT_MAX = 65535
 FORMAT_TYPES = ["combined", "json", "kv"]
 FORMAT_WEIGHTS = [0.6, 0.3, 0.1]
 WEIGHTED_FORMAT_TYPES = [
@@ -135,21 +137,24 @@ def generate_http_log_line(
         referer = random.choice(REFERERS)
         response_time_ms = random.randint(5, 1200)
 
+    client_port = random.randint(CLIENT_PORT_MIN, CLIENT_PORT_MAX)
+
     http_version = "HTTP/1.1"
 
     # --- VARIABILITÉ DE FORMAT ---
     format_type = random.choice(WEIGHTED_FORMAT_TYPES)
 
     if format_type == "combined":
-        # Format Nginx/Apache Combined Log: IP - - [Date] "METHOD URL PROTO" STATUS BYTES "REFERER" "USER-AGENT"
+        # Format Combined enrichi : IP:PORT - - [Date] "METHOD URL PROTO" STATUS BYTES "REFERER" "USER-AGENT"
         ts_combined = timestamp_dt.strftime("%d/%b/%Y:%H:%M:%S +0000")
-        return f'{ip} - - [{ts_combined}] "{method} {endpoint} {http_version}" {status} {bytes_sent} "{referer}" "{user_agent}"'
+        return f'{ip}:{client_port} - - [{ts_combined}] "{method} {endpoint} {http_version}" {status} {bytes_sent} "{referer}" "{user_agent}"'
 
     elif format_type == "json":
         # Format JSON structuré pour Kibana / Loki
         payload = {
             "timestamp": timestamp_dt.isoformat() + "Z",
             "remote_addr": ip,
+            "remote_port": client_port,
             "request_method": method,
             "request_uri": endpoint,
             "status": status,
@@ -163,11 +168,23 @@ def generate_http_log_line(
     else:
         # Format Key-Value
         ts_kv = timestamp_dt.strftime("%Y-%m-%d %H:%M:%S")
-        return f'time="{ts_kv}" client_ip={ip} method={method} path="{endpoint}" status={status} bytes={bytes_sent} duration_ms={response_time_ms} agent="{user_agent}"'
+        return f'time="{ts_kv}" client_ip={ip} client_port={client_port} method={method} path="{endpoint}" status={status} bytes={bytes_sent} duration_ms={response_time_ms} agent="{user_agent}"'
 
 
-def generate_huge_log_file(filename: str | Path, total_lines: int) -> None:
+def generate_huge_log_file(
+    filename: str | Path,
+    total_lines: int,
+    max_lines_per_second: int | None = None,
+    batch_size: int = BATCH_SIZE,
+) -> None:
     """Génère le fichier de logs par lots (buffers) optimisés."""
+    if total_lines < 0:
+        raise ValueError("Le nombre de lignes doit être supérieur ou égal à 0.")
+    if max_lines_per_second is not None and max_lines_per_second < 1:
+        raise ValueError("La cadence maximale doit être supérieure ou égale à 1.")
+    if batch_size < 1:
+        raise ValueError("La taille de lot doit être supérieure ou égale à 1.")
+
     output_path = Path(filename)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -188,11 +205,14 @@ def generate_huge_log_file(filename: str | Path, total_lines: int) -> None:
             buffer.append(line + "\n")
 
             # Écriture par blocs pour limiter l'impact I/O et RAM
-            if i % BATCH_SIZE == 0:
+            if i % batch_size == 0:
                 f.writelines(buffer)
                 buffer.clear()
                 written_lines = i
                 print(f"Progression : {written_lines:,} / {total_lines:,} lignes ({(written_lines/total_lines)*100:.1f}%)")
+                if max_lines_per_second is not None:
+                    target_elapsed = written_lines / max_lines_per_second
+                    time.sleep(max(0, target_elapsed - (time.time() - start_time)))
 
         # Écriture du reste du buffer
         if buffer:
@@ -218,12 +238,26 @@ if __name__ == "__main__":
         default=TOTAL_LINES,
         help=f"Nombre de lignes (défaut : {TOTAL_LINES}).",
     )
+    parser.add_argument(
+        "--max-rate",
+        type=int,
+        default=None,
+        help="Limite le nombre de lignes générées par seconde pour réduire la charge CPU.",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=BATCH_SIZE,
+        help=f"Nombre de lignes écrites par lot (défaut : {BATCH_SIZE}).",
+    )
     arguments = parser.parse_args()
 
     try:
         generate_huge_log_file(
             get_output_file(arguments.number),
             arguments.lines,
+            arguments.max_rate,
+            arguments.batch_size,
         )
     except ValueError as error:
         raise SystemExit(f"Erreur : {error}") from error

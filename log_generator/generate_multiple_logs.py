@@ -35,6 +35,18 @@ def parse_arguments() -> argparse.Namespace:
         default=DEFAULT_OUTPUT_DIR,
         help=f"Dossier de sortie (défaut : {DEFAULT_OUTPUT_DIR}).",
     )
+    parser.add_argument(
+        "--max-rate",
+        type=int,
+        default=None,
+        help="Limite le nombre de lignes générées par seconde et par fichier.",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=50_000,
+        help="Nombre de lignes écrites par lot.",
+    )
     return parser.parse_args()
 
 
@@ -42,6 +54,8 @@ def generate_multiple_logs(
     file_count: int,
     line_count: int,
     output_dir: Path,
+    max_lines_per_second: int | None = None,
+    batch_size: int = 50_000,
 ) -> None:
     """Génère ``file_count`` fichiers contenant chacun ``line_count`` lignes."""
     if file_count < 1:
@@ -53,7 +67,12 @@ def generate_multiple_logs(
 
     for file_number in range(1, file_count + 1):
         output_file = get_output_file(file_number, output_dir)
-        generate_huge_log_file(output_file, line_count)
+        generate_huge_log_file(
+            output_file,
+            line_count,
+            max_lines_per_second,
+            batch_size,
+        )
 
 
 def main() -> None:
@@ -63,6 +82,8 @@ def main() -> None:
             arguments.files,
             arguments.lines,
             arguments.output_dir,
+            arguments.max_rate,
+            arguments.batch_size,
         )
     except ValueError as error:
         raise SystemExit(f"Erreur : {error}") from error
