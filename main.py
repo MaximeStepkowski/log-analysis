@@ -17,6 +17,7 @@ except ImportError:  # pragma: no cover - disponible sous Unix uniquement
 
 from log_engine.ingestion import read_logs_from_directory
 from log_engine.parsing import parse_logs_parallel
+from log_engine.routing import route_log
 
 
 if sys.platform == "win32":
@@ -119,12 +120,15 @@ def main() -> None:
     # 3. Parcours complet de l'intégralité du flux
     for record in parsed_stream:
         total_lines += 1
-        if record.get("error"):
+        # Routage de chaque enregistrement par Structural Pattern Matching
+        kind, description = route_log(record)
+
+        if kind == "invalid":
             invalid_lines += 1
         else:
             valid_records += 1
             if len(preview_records) < preview_limit:
-                preview_records.append(record)
+                preview_records.append((kind, description, record))
 
         if total_lines % progress_interval == 0:
             elapsed = time.time() - start_time
@@ -170,8 +174,9 @@ def main() -> None:
     else:
         print(" Suivi RAM              : désactivé (utilisez --memory)")
     print("\n=== APERÇU DES RECORDS TRAITÉS ===")
-    for index, record in enumerate(preview_records, start=1):
-        print(f" Record {index} : {record}")
+    for index, (kind, description, record) in enumerate(preview_records, start=1):
+        print(f" Record {index} : [{kind}] {description}")
+        print(f"             {record}")
     print("=======================================================")
 
 
