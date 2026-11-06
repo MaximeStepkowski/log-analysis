@@ -9,16 +9,15 @@ VALID_LEVELS = {"INFO", "WARNING", "ERROR", "CRITICAL"}
 
 VALID_PROTOCOLS = {"TCP", "UDP"}
 
-"""
 # ============================================================
 # 2. FILTRAGE DES ENTREES VIDES
 # ============================================================
 
 def delete_empty_entries(logs: Iterable[Any]) -> Iterator[Any]:
-    \"""
+    """
     Supprime les entrées vides ou None.
     Utilisation de filter(None, ...).
-    \"""
+    """
 
     return filter(None, logs)
 
@@ -28,9 +27,9 @@ def delete_empty_entries(logs: Iterable[Any]) -> Iterator[Any]:
 # ============================================================
 
 def valid_log(log: Any) -> bool:
-    \"""
+    """
     Vérifie que le log possède une structure exploitable.
-    \"""
+    """
 
     if not isinstance(log, dict):
         return False
@@ -72,7 +71,6 @@ def valid_log(log: Any) -> bool:
         return False
 
     return True
-"""
 
 # ============================================================
 # 4. FILTRAGE INTELLIGENT DES NIVEAUX DE GRAVITE
@@ -208,6 +206,8 @@ def smart_filter(
     Le traitement reste paresseux : les logs ne sont
     pas stockés intégralement en mémoire.
     """
+
+    records = filter(valid_log, delete_empty_entries(records))
 
     selected_levels = VALID_LEVELS if levels is None else levels
     blocked_ips = set() if ip_blacklist is None else ip_blacklist
