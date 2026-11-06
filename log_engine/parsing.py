@@ -2,6 +2,7 @@
 
 import json
 import re
+from concurrent.futures import ProcessPoolExecutor
 from collections.abc import Iterable, Iterator
 from functools import lru_cache
 from datetime import datetime
@@ -208,3 +209,47 @@ def parse_logs(lines: Iterable[str]) -> Iterator[Record]:
     """Parse et normalise chaque ligne sans supprimer les enregistrements invalides."""
     parsed_records = map(parse_line, lines)
     yield from map(normalize_record, parsed_records)
+
+
+def _parse_batch(lines: list[str]) -> list[Record | None]:
+    """Parse un lot dans un processus worker."""
+    return list(map(normalize_record, map(parse_line, lines)))
+
+
+def parse_logs_parallel(
+    lines: Iterable[str],
+    workers: int,
+    batch_size: int = 2_000,
+) -> Iterator[Record]:
+    """Parse les lignes en parallèle avec un nombre borné de lots en mémoire."""
+    if workers < 2:
+        yield from parse_logs(lines)
+        return
+
+    def batches() -> Iterator[list[str]]:
+        batch: list[str] = []
+        for line in lines:
+            batch.append(line)
+            if len(batch) == batch_size:
+                yield batch
+                batch = []
+        if batch:
+            yield batch
+
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        pending = []
+        batches_iterator = iter(batches())
+
+        for _ in range(workers * 2):
+            try:
+                pending.append(executor.submit(_parse_batch, next(batches_iterator)))
+            except StopIteration:
+                break
+
+        while pending:
+            future = pending.pop(0)
+            yield from future.result()
+            try:
+                pending.append(executor.submit(_parse_batch, next(batches_iterator)))
+            except StopIteration:
+                pass

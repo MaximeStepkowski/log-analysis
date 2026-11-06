@@ -16,7 +16,7 @@ except ImportError:  # pragma: no cover - disponible sous Unix uniquement
     resource = None
 
 from log_engine.ingestion import read_logs_from_directory
-from log_engine.parsing import parse_logs
+from log_engine.parsing import parse_logs_parallel
 
 
 if sys.platform == "win32":
@@ -84,7 +84,16 @@ def main() -> None:
         action="store_true",
         help="Active le suivi détaillé de la consommation mémoire.",
     )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Nombre de processus de parsing (1 désactive le parallélisme).",
+    )
     arguments = parser.parse_args()
+
+    if arguments.workers < 1:
+        parser.error("--workers doit être supérieur ou égal à 1")
 
     logs_directory = Path(__file__).resolve().parent / "logs"
 
@@ -96,7 +105,7 @@ def main() -> None:
 
     # 2. Chaînage des générateurs (Streaming continu via yield from)
     raw_stream = read_logs_from_directory(logs_directory)
-    parsed_stream = parse_logs(raw_stream)
+    parsed_stream = parse_logs_parallel(raw_stream, arguments.workers)
 
     total_lines = 0
     valid_records = 0
