@@ -28,16 +28,16 @@ RAW_PATTERN = re.compile(
     r'(?P<ip>[\d.]+):(?P<port>\d+) \[(?P<user>\w+)\] - (?P<payload>.*)$'
 )
 
-# 192.168.1.9 - - [29/Oct/2026:18:20:52 +0000] "POST /index.html HTTP/1.1" 200 10121 "-" "curl/7.68.0"
+# 192.168.1.9:49152 - - [29/Oct/2026:18:20:52 +0000] "POST /index.html HTTP/1.1" 200 10121 "-" "curl/7.68.0"
 HTTP_COMBINED_PATTERN = re.compile(
-    r'^(?P<ip>[\d.]+) - - \[(?P<timestamp>[^]]+)\] '
+    r'^(?P<ip>[\d.]+)(?::(?P<port>\d+))? - - \[(?P<timestamp>[^]]+)\] '
     r'"(?P<method>\w+) (?P<path>\S+) (?P<protocol>HTTP/[\d.]+)" '
     r'(?P<status>\d{3}) (?P<bytes_sent>\d+) "(?P<referer>.*?)" "(?P<user_agent>.*?)"$'
 )
 
-# time="2026-10-29 18:20:52" client_ip=192.168.1.9 method=GET path="/" status=200 bytes=123 duration_ms=42 agent="curl/7.68.0"
+# time="2026-10-29 18:20:52" client_ip=192.168.1.9 client_port=49152 method=GET path="/" status=200 bytes=123 duration_ms=42 agent="curl/7.68.0"
 HTTP_KV_PATTERN = re.compile(
-    r'^time="(?P<timestamp>.*?)" client_ip=(?P<ip>[\d.]+) '
+    r'^time="(?P<timestamp>.*?)" client_ip=(?P<ip>[\d.]+)(?: client_port=(?P<port>\d+))? '
     r'method=(?P<method>\w+) path="(?P<path>.*?)" '
     r'status=(?P<status>\d{3}) bytes=(?P<bytes_sent>\d+) '
     r'duration_ms=(?P<duration_ms>\d+) agent="(?P<user_agent>.*?)"$'
@@ -108,6 +108,7 @@ def build_http_record(
     path: str,
     status: int | str,
     bytes_sent: int | str,
+    port: int | str | None = None,
     protocol: str = "HTTP/1.1",
     duration_ms: int | str | None = None,
     referer: str = "-",
@@ -139,8 +140,7 @@ def build_http_record(
         "bytes": int(bytes_sent),
         "referer": referer,
         "user_agent": user_agent,
-        # Le générateur ne fournit pas de port : HTTP utilise le port 80 par défaut.
-        "connection": (validated_ip, 80, protocol),
+        "connection": (validated_ip, int(port) if port is not None else 80, protocol),
     }
     if duration_ms is not None:
         record["duration_ms"] = int(duration_ms)
@@ -166,6 +166,7 @@ def parse_line(line: str) -> Record | None:
                     data["request_uri"],
                     data["status"],
                     data["body_bytes_sent"],
+                    port=data.get("remote_port"),
                     duration_ms=data.get("request_time_ms"),
                     referer=data.get("http_referrer", "-"),
                     user_agent=data.get("http_user_agent", ""),
