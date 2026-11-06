@@ -17,6 +17,7 @@ except ImportError:  # pragma: no cover - disponible sous Unix uniquement
 
 from log_engine.ingestion import read_logs_from_directory
 from log_engine.parsing import parse_logs_parallel
+from log_engine.routing import route_log
 
 
 if sys.platform == "win32":
@@ -110,21 +111,38 @@ def main() -> None:
     total_lines = 0
     valid_records = 0
     invalid_lines = 0
+    unknown_records = 0
     memory_samples = []
     sample_interval = 10_000  # Prendre un échantillon de la RAM toutes les 10 000 lignes
     progress_interval = 100_000
     preview_limit = 3
     preview_records = []
+    unknown_samples = []
+    invalid_samples = []
+    route_examples: dict[str, tuple[str, object]] = {}
 
     # 3. Parcours complet de l'intégralité du flux
     for record in parsed_stream:
         total_lines += 1
-        if record.get("error"):
+        # Routage de chaque enregistrement par Structural Pattern Matching
+        kind, description = route_log(record)
+
+        if kind not in route_examples:
+            route_examples[kind] = (description, record)
+
+        if kind == "invalid":
             invalid_lines += 1
+            if len(invalid_samples) < preview_limit:
+                invalid_samples.append((description, record))
         else:
             valid_records += 1
             if len(preview_records) < preview_limit:
-                preview_records.append(record)
+                preview_records.append((kind, description, record))
+
+        if kind == "unknown":
+            unknown_records += 1
+            if len(unknown_samples) < preview_limit:
+                unknown_samples.append(record)
 
         if total_lines % progress_interval == 0:
             elapsed = time.time() - start_time
@@ -140,7 +158,6 @@ def main() -> None:
         if arguments.memory and total_lines % sample_interval == 0:
             memory_samples.append(get_current_memory_bytes())
 
-    # Prendre un dernier échantillon en fin de flux
     if arguments.memory:
         current_mem = get_current_memory_bytes()
         if current_mem:
@@ -169,11 +186,37 @@ def main() -> None:
         print(f" 📊 Moyenne de RAM       : {avg_ram_mb:.2f} Mo")
     else:
         print(" Suivi RAM              : désactivé (utilisez --memory)")
+
+    if unknown_records:
+        print(
+            f"\n ⚠ {unknown_records:,} records n'ont été reconnus "
+            "par aucun case de route_log :")
+        for sample in unknown_samples:
+            print(f"     {sample}")
+
+    print("\n=== PREMIER EXEMPLE PAR TYPE DE ROUTAGE ===")
+    for kind, (description, record) in route_examples.items():
+        print(f" [{kind}] {description}")
+        print(f"             {record}")
+
+    print("\n=== APERÇU DES LIGNES INVALIDES ===")
+    if invalid_samples:
+        for index, (description, record) in enumerate(invalid_samples, start=1):
+            print(f" Invalide {index} : {description}")
+            print(f"             {record}")
+    else:
+        print(" Aucune ligne invalide.")
+
     print("\n=== APERÇU DES RECORDS TRAITÉS ===")
-    for index, record in enumerate(preview_records, start=1):
-        print(f" Record {index} : {record}")
+    for index, (kind, description, record) in enumerate(preview_records, start=1):
+        print(f" Record {index} : [{kind}] {description}")
+        print(f"             {record}")
     print("=======================================================")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (FileNotFoundError, NotADirectoryError, PermissionError) as error:
+        print(f"Erreur d'accès aux logs : {error}", file=sys.stderr)
+        raise SystemExit(1) from error
