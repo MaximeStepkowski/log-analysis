@@ -8,6 +8,7 @@ import sys
 import time
 from pathlib import Path
 
+from log_engine.aggregation import CountReport, most_common
 from log_engine.ingestion import read_logs_from_directory
 from log_engine.memory import get_current_memory_bytes, get_peak_memory_bytes
 from log_engine.parsing import parse_logs_parallel
@@ -58,6 +59,10 @@ def main() -> None:
     tracker = Tracker(sample_size=preview_limit)
     valid_stream = filter(tracker, parsed_stream)
     brute_force_detector = BruteForceDetector()
+    # Accumulation dynamique des compteurs (defaultdict), dans la meme passe.
+    # Le flux est deja filtre par le Tracker : le rapport ne porte donc que sur
+    # les records valides, le decompte des rejets restant a la charge du Tracker.
+    report = CountReport()
 
     valid_records = 0
     sample_interval = 10_000
@@ -68,6 +73,7 @@ def main() -> None:
     for record in valid_stream:
 
         valid_records += 1
+        report.update(record)
         if "ip" in record and "status" in record:
             brute_force_detector.process(record)
 
@@ -115,6 +121,21 @@ def main() -> None:
         print(f" 📊 Moyenne de RAM       : {avg_ram_mb:.2f} Mo")
     else:
         print(" Suivi RAM              : désactivé (utilisez --memory)")
+
+    print("\n=== COMPTAGE PAR CATÉGORIE ET PAR UTILISATEUR ===")
+    print(" Par catégorie de log :")
+    for category, count in most_common(report.by_category):
+        print(f"   - {category:<12} : {count:,}")
+    print(" Par niveau de sévérité :")
+    for level, count in most_common(report.by_level):
+        print(f"   - {level:<12} : {count:,}")
+    print(f" Utilisateurs distincts : {len(report.by_user):,}")
+    print(" Top 5 utilisateurs :")
+    for user, count in most_common(report.by_user, limit=5):
+        levels = most_common(report.by_user_level[user], limit=3)
+        detail = ", ".join(f"{name}={value:,}" for name, value in levels)
+        label = user if len(user) <= 28 else f"{user[:25]}..."
+        print(f"   - {label:<28} : {count:,} ({detail})")
 
     if tracker.unknown:
         print(
