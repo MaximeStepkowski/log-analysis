@@ -130,18 +130,20 @@ def main() -> None:
         # Routage de chaque enregistrement par Structural Pattern Matching
         kind, description = route_log(record)
 
+        valid_line = True
         if not smart_filter(record):
             invalid_lines += 1
             if len(invalid_samples) < preview_limit:
                 invalid_samples.append((description, record))
-            continue
+            valid_line = False
 
         if kind not in route_examples:
             route_examples[kind] = (description, record)
 
-        valid_records += 1
-        if len(preview_records) < preview_limit:
-            preview_records.append((kind, description, record))
+        if valid_line:
+            valid_records += 1
+            if len(preview_records) < preview_limit:
+                preview_records.append((kind, description, record))
 
         if kind == "unknown":
             unknown_records += 1
