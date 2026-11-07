@@ -22,10 +22,10 @@ def read_logs_from_directory(
         raise NotADirectoryError(f"Directory not found: {directory}")
 
     paths = sorted(folder.glob(pattern))
+    if not paths:
+        raise FileNotFoundError(
+            f"Aucun fichier correspondant à '{pattern}' dans {folder}"
+        )
+
     for path in paths:
         yield from read_logs(path)
-    else:
-        if not paths:
-            raise FileNotFoundError(
-                f"Aucun fichier correspondant à '{pattern}' dans {folder}"
-            )

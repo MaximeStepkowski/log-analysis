@@ -3,7 +3,8 @@
 from ipaddress import ip_address
 from typing import Any, TypeAlias
 
-Record: TypeAlias = dict[str, Any]
+from log_engine.parsing import Record
+
 LogItem: TypeAlias = str | Record | tuple[Any, ...]
 Route: TypeAlias = tuple[str, str]
 

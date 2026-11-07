@@ -5,13 +5,13 @@ import re
 from concurrent.futures import ProcessPoolExecutor
 from collections.abc import Iterable, Iterator
 from functools import lru_cache
-from datetime import datetime
+from datetime import datetime, timezone
 from ipaddress import ip_address
 from typing import Any, TypeAlias
 
-from log_engine.normalization import normalize_record
-
 Record: TypeAlias = dict[str, Any]
+
+from log_engine.normalization import normalize_record
 
 LEVELS = ("INFO", "WARNING", "ERROR", "CRITICAL")
 
@@ -58,7 +58,8 @@ def parse_timestamp(value: str) -> datetime:
 
     if "T" in normalized or normalized[4:5] == "-":
         try:
-            return datetime.fromisoformat(normalized)
+            parsed = datetime.fromisoformat(normalized)
+            return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
         except ValueError:
             pass
 
