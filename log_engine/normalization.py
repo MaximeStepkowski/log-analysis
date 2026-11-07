@@ -1,13 +1,13 @@
 """Normalisation des enregistrements de logs déjà parsés."""
 
 from datetime import datetime
-from typing import Any, TypeAlias
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from log_engine.parsing import Record
 
 
-Record: TypeAlias = dict[str, Any]
-
-
-def normalize_record(record: Record | None) -> Record | None:
+def normalize_record(record: "Record | None") -> "Record | None":
     """Nettoie et normalise un enregistrement déjà parsé."""
     if record is None:
         return None
