@@ -68,7 +68,3 @@ def valid_log(log: Any) -> bool:
         return False
 
     return True
-
-def smart_filter(records: Iterable[Any]) -> Iterator[Any]:
-    """Renvoie paresseusement les enregistrements invalides d'un flux."""
-    return filter(lambda record: not valid_log(record), delete_empty_entries(records))

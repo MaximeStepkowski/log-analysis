@@ -23,7 +23,6 @@ class Tracker:
     def __call__(self, record: Any) -> bool:
         self.seen += 1
         kind, description = route_log(record)
-        self.kinds[kind] += 1
 
         if kind not in self.route_examples:
             self.route_examples[kind] = (description, record)
