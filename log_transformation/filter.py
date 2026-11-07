@@ -1,5 +1,4 @@
 from datetime import datetime
-from collections.abc import Iterable, Iterator
 from typing import Any
 
 # ============================================================
@@ -7,19 +6,6 @@ from typing import Any
 # ============================================================
 
 VALID_LEVELS = {"INFO", "WARNING", "ERROR", "CRITICAL"}
-
-# ============================================================
-# FILTRAGE DES ENTREES VIDES
-# ============================================================
-
-def delete_empty_entries(logs: Iterable[Any]) -> Iterator[Any]:
-    """
-    Supprime les entrées vides ou None.
-    Utilisation de filter(None, ...).
-    """
-
-    return filter(None, logs)
-
 
 # ============================================================
 # VERIFICATION DE LA STRUCTURE DES LOGS
