@@ -176,6 +176,12 @@ Vérifier la syntaxe Python :
 python -m compileall -q .
 ```
 
+Exécuter les tests unitaires :
+
+```bash
+python -m pytest
+```
+
 Vérifier le respect de la norme PEP 8 :
 
 ```bash
