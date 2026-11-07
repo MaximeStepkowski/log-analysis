@@ -69,7 +69,6 @@ def valid_log(log: Any) -> bool:
 
     return True
 
-
-def smart_filter(record: Any) -> bool:
-    """Écarte les entrées vides et les logs invalides."""
-    return any(filter(lambda entry: valid_log(entry), delete_empty_entries((record,))))
+def smart_filter(records: Iterable[Any]) -> Iterator[Any]:
+    """Renvoie paresseusement les enregistrements invalides d'un flux."""
+    return filter(lambda record: not valid_log(record), delete_empty_entries(records))

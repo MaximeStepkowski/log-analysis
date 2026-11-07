@@ -19,6 +19,7 @@ from log_engine.ingestion import read_logs_from_directory
 from log_engine.parsing import parse_logs_parallel
 from log_engine.routing import route_log
 from log_transformation.filter import smart_filter
+from log_transformation.Tracker import Tracker
 
 
 if sys.platform == "win32":
@@ -108,60 +109,32 @@ def main() -> None:
     # 2. Chaînage des générateurs (Streaming continu via yield from)
     raw_stream = read_logs_from_directory(logs_directory)
     parsed_stream = parse_logs_parallel(raw_stream, arguments.workers)
-
-    total_lines = 0
-    valid_records = 0
-    invalid_lines = 0
-    unknown_records = 0
-    memory_samples = []
-    sample_interval = 10_000  # Prendre un échantillon de la RAM toutes les 10 000 lignes
-    progress_interval = 100_000
     preview_limit = 3
-    preview_records = []
-    unknown_samples = []
-    invalid_samples = []
-    route_examples: dict[str, tuple[str, object]] = {}
+    tracker = Tracker(sample_size=preview_limit)
+    valid_stream = filter(tracker, parsed_stream)
+    
+    valid_records = 0
+    sample_interval = 10_000
+    memory_samples = []
+    progress_interval = 100_000
 
     # 3. Filtrage de chaque enregistrement individuellement
-    for record in parsed_stream:
-        
-        total_lines += 1
+    for record in valid_stream:
 
-        # Routage de chaque enregistrement par Structural Pattern Matching
-        kind, description = route_log(record)
+        valid_records += 1
 
-        valid_line = True
-        if not smart_filter(record):
-            invalid_lines += 1
-            if len(invalid_samples) < preview_limit:
-                invalid_samples.append((description, record))
-            valid_line = False
-
-        if kind not in route_examples:
-            route_examples[kind] = (description, record)
-
-        if valid_line:
-            valid_records += 1
-            if len(preview_records) < preview_limit:
-                preview_records.append((kind, description, record))
-
-        if kind == "unknown":
-            unknown_records += 1
-            if len(unknown_samples) < preview_limit:
-                unknown_samples.append(record)
-
-        if total_lines % progress_interval == 0:
+        if tracker.seen % progress_interval == 0:
             elapsed = time.time() - start_time
-            rate = total_lines / elapsed if elapsed else 0
+            rate = tracker.seen / elapsed if elapsed else 0
             print(
-                f"Progression : {total_lines:,} lignes | "
+                f"Progression : {tracker.seen:,} lignes | "
                 f"valides : {valid_records:,} | "
-                f"invalides : {invalid_lines:,} | "
+                f"invalides : {tracker.rejected:,} | "
                 f"débit : {rate:,.0f} lignes/s"
             )
 
         # Échantillonnage régulier pour calculer la moyenne sans impacter les performances
-        if arguments.memory and total_lines % sample_interval == 0:
+        if arguments.memory and tracker.seen % sample_interval == 0:
             memory_samples.append(get_current_memory_bytes())
 
     if arguments.memory:
@@ -183,9 +156,9 @@ def main() -> None:
 
     # 5. Affichage du rapport d'exécution
     print("\n=== RAPPORT DE CONSOMMATION MÉMOIRE ET PERFORMANCES ===")
-    print(f" Total de lignes lues   : {total_lines:,} lignes")
+    print(f" Total de lignes lues   : {tracker.seen:,} lignes")
     print(f" Records valides        : {valid_records:,}")
-    print(f" Lignes invalides       : {invalid_lines:,}")
+    print(f" Lignes invalides       : {tracker.rejected:,}")
     print(f" Temps d'exécution      : {elapsed_time:.2f} secondes")
     if arguments.memory:
         print(f" 📈 Pic de RAM (Peak)    : {peak_ram_mb:.2f} Mo")
@@ -193,28 +166,28 @@ def main() -> None:
     else:
         print(" Suivi RAM              : désactivé (utilisez --memory)")
 
-    if unknown_records:
+    if tracker.unknown:
         print(
-            f"\n ⚠ {unknown_records:,} records n'ont été reconnus "
+            f"\n ⚠ {tracker.unknown:,} records n'ont été reconnus "
             "par aucun case de route_log :")
-        for sample in unknown_samples:
+        for sample in tracker.unknown_samples:
             print(f"     {sample}")
 
     print("\n=== PREMIER EXEMPLE PAR TYPE DE ROUTAGE ===")
-    for kind, (description, record) in route_examples.items():
+    for kind, (description, record) in tracker.route_examples.items():
         print(f" [{kind}] {description}")
         print(f"             {record}")
 
     print("\n=== APERÇU DES LIGNES INVALIDES ===")
-    if invalid_samples:
-        for index, (description, record) in enumerate(invalid_samples, start=1):
+    if tracker.invalid_samples:
+        for index, (description, record) in enumerate(tracker.invalid_samples, start=1):
             print(f" Invalide {index} : {description}")
             print(f"             {record}")
     else:
         print(" Aucune ligne invalide.")
 
     print("\n=== APERÇU DES RECORDS TRAITÉS ===")
-    for index, (kind, description, record) in enumerate(preview_records, start=1):
+    for index, (kind, description, record) in enumerate(tracker.valid_samples, start=1):
         print(f" Record {index} : [{kind}] {description}")
         print(f"             {record}")
     print("=======================================================")
