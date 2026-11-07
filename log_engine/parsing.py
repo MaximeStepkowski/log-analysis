@@ -1,5 +1,6 @@
 """Module 1 : parsing des lignes de logs vers des dictionnaires Python."""
 
+from log_transformation.normalization import normalize_record
 import json
 import re
 from concurrent.futures import ProcessPoolExecutor
@@ -11,33 +12,38 @@ from typing import Any, TypeAlias
 
 Record: TypeAlias = dict[str, Any]
 
-from log_engine.normalization import normalize_record
 
 LEVELS = ("INFO", "WARNING", "ERROR", "CRITICAL")
 
-# 2026-10-29 15:26:45 | LEVEL=INFO | CONNECTION=(192.168.1.83,24649,UDP) | USER=bob | MSG="..."
+# 2026-10-29 15:26:45 | LEVEL=INFO | CONNECTION=(192.168.1.83,24649,UDP) |
+# USER=bob | MSG="..."
 KV_PATTERN = re.compile(
     r'^(?P<timestamp>[\d-]+ [\d:]+) \| LEVEL=(?P<level>\w+) \| '
     r'CONNECTION=\((?P<ip>[\d.]+),(?P<port>\d+),(?P<protocol>\w+)\) \| '
     r'USER=(?P<user>\w+) \| MSG="(?P<payload>.*)"$'
 )
 
-# 2026-10-29 15:26:48 INFO 10.0.0.43:63092 [david] - Unauthorized access attempt detected
+# 2026-10-29 15:26:48 INFO 10.0.0.43:63092 [david] - Unauthorized access
+# attempt detected
 RAW_PATTERN = re.compile(
     r'^(?P<timestamp>[\d-]+ [\d:]+) (?P<level>\w+) '
     r'(?P<ip>[\d.]+):(?P<port>\d+) \[(?P<user>\w+)\] - (?P<payload>.*)$'
 )
 
-# 192.168.1.9:49152 - - [29/Oct/2026:18:20:52 +0000] "POST /index.html HTTP/1.1" 200 10121 "-" "curl/7.68.0"
+# 192.168.1.9:49152 - - [29/Oct/2026:18:20:52 +0000] "POST /index.html
+# HTTP/1.1" 200 10121 "-" "curl/7.68.0"
 HTTP_COMBINED_PATTERN = re.compile(
     r'^(?P<ip>[\d.]+)(?::(?P<port>\d+))? - - \[(?P<timestamp>[^]]+)\] '
     r'"(?P<method>\w+) (?P<path>\S+) (?P<protocol>HTTP/[\d.]+)" '
     r'(?P<status>\d{3}) (?P<bytes_sent>\d+) "(?P<referer>.*?)" "(?P<user_agent>.*?)"$'
 )
 
-# time="2026-10-29 18:20:52" client_ip=192.168.1.9 client_port=49152 method=GET path="/" status=200 bytes=123 duration_ms=42 agent="curl/7.68.0"
+# time="2026-10-29 18:20:52" client_ip=192.168.1.9 client_port=49152
+# method=GET path="/" status=200 bytes=123 duration_ms=42
+# agent="curl/7.68.0"
 HTTP_KV_PATTERN = re.compile(
-    r'^time="(?P<timestamp>.*?)" client_ip=(?P<ip>[\d.]+)(?: client_port=(?P<port>\d+))? '
+    r'^time="(?P<timestamp>.*?)" client_ip=(?P<ip>[\d.]+)'
+    r'(?: client_port=(?P<port>\d+))? '
     r'method=(?P<method>\w+) path="(?P<path>.*?)" '
     r'status=(?P<status>\d{3}) bytes=(?P<bytes_sent>\d+) '
     r'duration_ms=(?P<duration_ms>\d+) agent="(?P<user_agent>.*?)"$'
@@ -59,7 +65,8 @@ def parse_timestamp(value: str) -> datetime:
     if "T" in normalized or normalized[4:5] == "-":
         try:
             parsed = datetime.fromisoformat(normalized)
-            return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
+            return parsed.replace(
+                tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
         except ValueError:
             pass
 

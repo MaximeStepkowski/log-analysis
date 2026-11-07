@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 
-from generate_logs import get_output_file, generate_huge_log_file
+from log_generator.generate_logs import get_output_file, generate_huge_log_file
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
