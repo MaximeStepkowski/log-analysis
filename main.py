@@ -18,6 +18,7 @@ except ImportError:  # pragma: no cover - disponible sous Unix uniquement
 from log_engine.ingestion import read_logs_from_directory
 from log_engine.parsing import parse_logs_parallel
 from log_engine.routing import route_log
+from log_transformation.filter import smart_filter
 
 
 if sys.platform == "win32":
@@ -121,23 +122,26 @@ def main() -> None:
     invalid_samples = []
     route_examples: dict[str, tuple[str, object]] = {}
 
-    # 3. Parcours complet de l'intégralité du flux
+    # 3. Filtrage de chaque enregistrement individuellement
     for record in parsed_stream:
+        
         total_lines += 1
+
+        if not smart_filter(record):
+            invalid_lines += 1
+            if len(invalid_samples) < preview_limit:
+                invalid_samples.append((description, record))
+            continue
+        
         # Routage de chaque enregistrement par Structural Pattern Matching
         kind, description = route_log(record)
 
         if kind not in route_examples:
             route_examples[kind] = (description, record)
 
-        if kind == "invalid":
-            invalid_lines += 1
-            if len(invalid_samples) < preview_limit:
-                invalid_samples.append((description, record))
-        else:
-            valid_records += 1
-            if len(preview_records) < preview_limit:
-                preview_records.append((kind, description, record))
+        valid_records += 1
+        if len(preview_records) < preview_limit:
+            preview_records.append((kind, description, record))
 
         if kind == "unknown":
             unknown_records += 1

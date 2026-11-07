@@ -1,31 +1,78 @@
-"""Print records matching manually configured filter conditions."""
-
-from log_engine.ingestion import read_logs_from_directory
-from log_engine.parsing import parse_logs
-from log_transformation.filter import smart_filter
+from datetime import datetime
+from typing import Any, Iterable, Iterator
+from log_engine.parsing import Record
 
 
-RECORDS = list(parse_logs(read_logs_from_directory("logs")))
+# ============================================================
+# CONSTANTES ET CRITERES DE FILTRAGE
+# ============================================================
 
-# Edit these options to inspect different records. Remove an option to disable it.
-FILTER_OPTIONS = {
-    "levels": {"ERROR"},
-    "ip_blacklist": {"192.168.1.63"},
-    "excluded_users": {"bob"},
-    "protocols": {"UDP"},
-    "keyword": "failed",
-}
+VALID_LEVELS = {"INFO", "WARNING", "ERROR", "CRITICAL"}
+
+VALID_PROTOCOLS = {"TCP", "UDP"}
+
+# ============================================================
+# FILTRAGE DES ENTREES VIDES
+# ============================================================
+
+def delete_empty_entries(logs: Iterable[Any]) -> Iterator[Any]:
+    """
+    Supprime les entrées vides ou None.
+    Utilisation de filter(None, ...).
+    """
+
+    return filter(None, logs)
 
 
-def main() -> None:
-    matching_records = smart_filter(RECORDS, **FILTER_OPTIONS)
-    count = 0
+# ============================================================
+# VERIFICATION DE LA STRUCTURE DES LOGS
+# ============================================================
 
-    for count, record in enumerate(matching_records, start=1):
-        print(f"{count}: {record}")
+def valid_log(log: Any) -> bool:
+    """
+    Vérifie que le log possède une structure exploitable.
+    """
 
-    print(f"\nTotal matching records: {count}")
+    if not isinstance(log, dict):
+        return False
+
+    timestamp = log.get("timestamp")
+    if not isinstance(timestamp, (str, datetime)):
+        return False
+
+    if isinstance(timestamp, str) and not timestamp.strip():
+        return False
+
+    if log.get("level") not in VALID_LEVELS:
+        return False
+
+    if not isinstance(log.get("user"), str):
+        return False
+
+    if not isinstance(log.get("payload"), (dict, str)):
+        return False
+
+    connection = log.get("connection")
+    if not isinstance(connection, tuple) or len(connection) != 3:
+        return False
+
+    ip, port, protocol = connection
+
+    if not isinstance(ip, str) or not ip.strip():
+        return False
+
+    if not isinstance(port, int) or isinstance(port, bool):
+        return False
+
+    if not 1 <= port <= 65535:
+        return False
+
+    if not isinstance(protocol, str) or not protocol.strip():
+        return False
+
+    return True
 
 
-if __name__ == "__main__":
-    main()
+def smart_filter(record: Any) -> Record | None:
+    """Écarte les entrées vides et les logs invalides."""
+    return any(filter(lambda entry: valid_log(entry), delete_empty_entries((record,))))
