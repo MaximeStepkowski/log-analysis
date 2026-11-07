@@ -1,5 +1,4 @@
 from datetime import datetime
-from collections.abc import Iterable, Iterator
 from typing import Any
 
 # ============================================================
@@ -7,19 +6,6 @@ from typing import Any
 # ============================================================
 
 VALID_LEVELS = {"INFO", "WARNING", "ERROR", "CRITICAL"}
-
-# ============================================================
-# FILTRAGE DES ENTREES VIDES
-# ============================================================
-
-def delete_empty_entries(logs: Iterable[Any]) -> Iterator[Any]:
-    """
-    Supprime les entrées vides ou None.
-    Utilisation de filter(None, ...).
-    """
-
-    return filter(None, logs)
-
 
 # ============================================================
 # VERIFICATION DE LA STRUCTURE DES LOGS
@@ -68,7 +54,3 @@ def valid_log(log: Any) -> bool:
         return False
 
     return True
-
-def smart_filter(records: Iterable[Any]) -> Iterator[Any]:
-    """Renvoie paresseusement les enregistrements invalides d'un flux."""
-    return filter(lambda record: not valid_log(record), delete_empty_entries(records))

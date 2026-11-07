@@ -17,8 +17,6 @@ except ImportError:  # pragma: no cover - disponible sous Unix uniquement
 
 from log_engine.ingestion import read_logs_from_directory
 from log_engine.parsing import parse_logs_parallel
-from log_engine.routing import route_log
-from log_transformation.filter import smart_filter
 from log_transformation.Tracker import Tracker
 
 

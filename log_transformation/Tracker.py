@@ -1,4 +1,3 @@
-from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -14,7 +13,6 @@ class Tracker:
     seen: int = 0                                   # total lines
     rejected: int = 0                               # failed valid_log
     unknown: int = 0                                # kind == "unknown"
-    kinds: defaultdict = field(default_factory=lambda: defaultdict(int))
     route_examples: dict = field(default_factory=dict)   # first example per kind
     valid_samples: list = field(default_factory=list)
     invalid_samples: list = field(default_factory=list)
@@ -23,7 +21,6 @@ class Tracker:
     def __call__(self, record: Any) -> bool:
         self.seen += 1
         kind, description = route_log(record)
-        self.kinds[kind] += 1
 
         if kind not in self.route_examples:
             self.route_examples[kind] = (description, record)
