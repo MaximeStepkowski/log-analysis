@@ -127,14 +127,14 @@ def main() -> None:
         
         total_lines += 1
 
+        # Routage de chaque enregistrement par Structural Pattern Matching
+        kind, description = route_log(record)
+
         if not smart_filter(record):
             invalid_lines += 1
             if len(invalid_samples) < preview_limit:
                 invalid_samples.append((description, record))
             continue
-        
-        # Routage de chaque enregistrement par Structural Pattern Matching
-        kind, description = route_log(record)
 
         if kind not in route_examples:
             route_examples[kind] = (description, record)

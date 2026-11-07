@@ -1,15 +1,12 @@
 from datetime import datetime
-from typing import Any, Iterable, Iterator
-from log_engine.parsing import Record
-
+from collections.abc import Iterable, Iterator
+from typing import Any
 
 # ============================================================
 # CONSTANTES ET CRITERES DE FILTRAGE
 # ============================================================
 
 VALID_LEVELS = {"INFO", "WARNING", "ERROR", "CRITICAL"}
-
-VALID_PROTOCOLS = {"TCP", "UDP"}
 
 # ============================================================
 # FILTRAGE DES ENTREES VIDES
@@ -73,6 +70,6 @@ def valid_log(log: Any) -> bool:
     return True
 
 
-def smart_filter(record: Any) -> Record | None:
+def smart_filter(record: Any) -> bool:
     """Écarte les entrées vides et les logs invalides."""
     return any(filter(lambda entry: valid_log(entry), delete_empty_entries((record,))))
