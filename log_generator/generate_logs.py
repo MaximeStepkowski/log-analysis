@@ -23,8 +23,13 @@ def get_output_file(
 
     return Path(output_dir) / f"logs_file_http_{file_number}.log"
 
+
 # --- JEUX DE DONNÉES HTTP ---
-IP_POOL = [f"192.168.1.{i}" for i in range(1, 100)] + [f"10.0.0.{i}" for i in range(1, 50)] + [f"172.16.0.{i}" for i in range(1, 30)]
+IP_POOL = (
+    [f"192.168.1.{i}" for i in range(1, 100)]
+    + [f"10.0.0.{i}" for i in range(1, 50)]
+    + [f"172.16.0.{i}" for i in range(1, 30)]
+)
 BLACKLISTED_IPS = ["192.168.1.66", "10.0.0.99", "172.16.0.4"]
 ALL_IPS = IP_POOL + BLACKLISTED_IPS
 # IP dédiée à la simulation d'attaque Web (Force Brute / Fuzzing)
@@ -39,7 +44,10 @@ WEIGHTED_METHODS = [
 ]
 
 STATUS_CODES = [200, 201, 301, 304, 400, 401, 403, 404, 500, 502, 503]
-STATUS_WEIGHTS = [0.70, 0.08, 0.05, 0.05, 0.03, 0.02, 0.02, 0.03, 0.01, 0.005, 0.005]
+STATUS_WEIGHTS = [
+    0.70, 0.08, 0.05, 0.05, 0.03, 0.02,
+    0.02, 0.03, 0.01, 0.005, 0.005,
+]
 WEIGHTED_STATUS_CODES = [
     status
     for status, weight in zip(STATUS_CODES, STATUS_WEIGHTS)
@@ -54,8 +62,15 @@ ENDPOINTS = [
 ]
 
 USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+    (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ),
+    (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 "
+        "Safari/605.1.15"
+    ),
     "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0",
     "Python-urllib/3.10",
     "curl/7.68.0",
@@ -99,7 +114,7 @@ def generate_http_log_line(
             "",                                      # Ligne totalement vide
             " ",                                     # Un seul espace
             "           ",                           # Multiples espaces
-            "\t\t   "                                # Mélange de tabulations et d'espaces
+            "\t\t   "  # Mélange de tabulations et d'espaces
         ]
         return random.choice(empty_types)
 
@@ -109,8 +124,9 @@ def generate_http_log_line(
             "CORRUPTED_DATA_NULL_BYTES_\x00\x00\x00",
             # Tronqué (manque status & bytes)
             "192.168.1.1 - - [05/Nov/2026:12:00:00 +0000] \"GET / HTTP/1.1\"",
-            '{"timestamp": "2026-11-05T12:00:00Z", "ip": ',                   # JSON invalide
-            "2026-99-99 99:99:99 HTTP INVALID_TIMESTAMP",                     # Horodatage absurde
+            '{"timestamp": "2026-11-05T12:00:00Z", "ip": ',
+            # JSON invalide
+            "2026-99-99 99:99:99 HTTP INVALID_TIMESTAMP",
             # Format brut sans IP/Date
             "GET /admin/login HTTP/1.1 401 512"
         ]
@@ -145,9 +161,14 @@ def generate_http_log_line(
     format_type = random.choice(WEIGHTED_FORMAT_TYPES)
 
     if format_type == "combined":
-        # Format Combined enrichi : IP:PORT - - [Date] "METHOD URL PROTO" STATUS BYTES "REFERER" "USER-AGENT"
+        # Format Combined enrichi : IP:PORT - - [Date] "METHOD URL PROTO" STATUS
+        # BYTES "REFERER" "USER-AGENT"
         ts_combined = timestamp_dt.strftime("%d/%b/%Y:%H:%M:%S +0000")
-        return f'{ip}:{client_port} - - [{ts_combined}] "{method} {endpoint} {http_version}" {status} {bytes_sent} "{referer}" "{user_agent}"'
+        return (
+            f'{ip}:{client_port} - - [{ts_combined}] '
+            f'"{method} {endpoint} {http_version}" {status} '
+            f'{bytes_sent} "{referer}" "{user_agent}"'
+        )
 
     elif format_type == "json":
         # Format JSON structuré pour Kibana / Loki
@@ -168,7 +189,12 @@ def generate_http_log_line(
     else:
         # Format Key-Value
         ts_kv = timestamp_dt.strftime("%Y-%m-%d %H:%M:%S")
-        return f'time="{ts_kv}" client_ip={ip} client_port={client_port} method={method} path="{endpoint}" status={status} bytes={bytes_sent} duration_ms={response_time_ms} agent="{user_agent}"'
+        return (
+            f'time="{ts_kv}" client_ip={ip} client_port={client_port} '
+            f'method={method} path="{endpoint}" status={status} '
+            f'bytes={bytes_sent} duration_ms={response_time_ms} '
+            f'agent="{user_agent}"'
+        )
 
 
 def generate_huge_log_file(
@@ -209,7 +235,11 @@ def generate_huge_log_file(
                 f.writelines(buffer)
                 buffer.clear()
                 written_lines = i
-                print(f"Progression : {written_lines:,} / {total_lines:,} lignes ({(written_lines/total_lines)*100:.1f}%)")
+                progress = written_lines / total_lines * 100
+                print(
+                    f"Progression : {written_lines:,} / {total_lines:,} "
+                    f"lignes ({progress:.1f}%)"
+                )
                 if max_lines_per_second is not None:
                     target_elapsed = written_lines / max_lines_per_second
                     time.sleep(max(0, target_elapsed - (time.time() - start_time)))
@@ -242,7 +272,10 @@ if __name__ == "__main__":
         "--max-rate",
         type=int,
         default=None,
-        help="Limite le nombre de lignes générées par seconde pour réduire la charge CPU.",
+        help=(
+            "Limite le nombre de lignes générées par seconde "
+            "pour réduire la charge CPU."
+        ),
     )
     parser.add_argument(
         "--batch-size",

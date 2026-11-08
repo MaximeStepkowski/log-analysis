@@ -1,81 +1,17 @@
 """
 Point d'entrée principal (main.py)
-Mesure du pic de RAM et calcul de la moyenne de consommation mémoire sur l'ensemble des fichiers.
+Mesure du pic de RAM et calcul de la moyenne de consommation mémoire.
 """
 
 import argparse
-import ctypes
-import os
 import sys
 import time
 from pathlib import Path
 
-try:
-    import resource
-except ImportError:  # pragma: no cover - disponible sous Unix uniquement
-    resource = None
-
 from log_engine.ingestion import read_logs_from_directory
+from log_engine.memory import get_current_memory_bytes, get_peak_memory_bytes
 from log_engine.parsing import parse_logs_parallel
-from log_transformation.Tracker import Tracker
-
-
-if sys.platform == "win32":
-    class MemoryCounters(ctypes.Structure):
-        _fields_ = [
-            ("cb", ctypes.c_ulong),
-            ("PageFaultCount", ctypes.c_ulong),
-            ("PeakWorkingSetSize", ctypes.c_size_t),
-            ("WorkingSetSize", ctypes.c_size_t),
-            ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
-            ("QuotaPagedPoolUsage", ctypes.c_size_t),
-            ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
-            ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
-            ("PagefileUsage", ctypes.c_size_t),
-            ("PeakPagefileUsage", ctypes.c_size_t),
-        ]
-
-
-def get_windows_memory() -> tuple[int, int]:
-    """Retourne le RSS courant et le pic RSS sous Windows."""
-    counters = MemoryCounters()
-    counters.cb = ctypes.sizeof(counters)
-    process = ctypes.windll.kernel32.GetCurrentProcess()
-    success = ctypes.windll.psapi.GetProcessMemoryInfo(
-        process,
-        ctypes.byref(counters),
-        counters.cb,
-    )
-    if not success:
-        return 0, 0
-    return counters.WorkingSetSize, counters.PeakWorkingSetSize
-
-
-def get_current_memory_bytes() -> int:
-    """Retourne la mémoire résidente courante du processus."""
-    if sys.platform == "win32":
-        return get_windows_memory()[0]
-
-    try:
-        with open("/proc/self/statm", encoding="ascii") as statm_file:
-            resident_pages = int(statm_file.readline().split()[1])
-        return resident_pages * os.sysconf("SC_PAGE_SIZE")
-    except (OSError, IndexError, ValueError):
-        return 0
-
-
-def get_peak_memory_bytes() -> int:
-    """Retourne le pic RSS en octets selon le système d'exploitation."""
-    if sys.platform == "win32":
-        return get_windows_memory()[1]
-
-    if resource is None:
-        return 0
-
-    peak_memory = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    if sys.platform == "linux":
-        return peak_memory * 1024
-    return peak_memory
+from log_transformation.tracker import Tracker
 
 
 def main() -> None:
@@ -102,7 +38,9 @@ def main() -> None:
     start_time = time.time()
 
     print(
-        f"=== ANCIEN/NOUVEAU PIPELINE : LECTURE DE TOUT LE DOSSIER '{logs_directory}' ===")
+        "=== ANCIEN/NOUVEAU PIPELINE : "
+        f"LECTURE DE TOUT LE DOSSIER '{logs_directory}' ==="
+    )
 
     # 2. Chaînage des générateurs (Streaming continu via yield from)
     raw_stream = read_logs_from_directory(logs_directory)
@@ -110,7 +48,7 @@ def main() -> None:
     preview_limit = 3
     tracker = Tracker(sample_size=preview_limit)
     valid_stream = filter(tracker, parsed_stream)
-    
+
     valid_records = 0
     sample_interval = 10_000
     memory_samples = []
@@ -131,7 +69,8 @@ def main() -> None:
                 f"débit : {rate:,.0f} lignes/s"
             )
 
-        # Échantillonnage régulier pour calculer la moyenne sans impacter les performances
+        # Échantillonnage régulier pour calculer la moyenne sans impacter les
+        # performances
         if arguments.memory and tracker.seen % sample_interval == 0:
             memory_samples.append(get_current_memory_bytes())
 

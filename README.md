@@ -48,3 +48,143 @@ Le projet est découpé en 4 modules principaux respectant les prérequis d'opti
 
 ## 📂 Structure du Projet
 
+## 🚀 Installation et utilisation
+
+Les commandes suivantes doivent être exécutées depuis la racine du projet.
+
+### Bash (Linux/macOS)
+
+Créer et activer l'environnement virtuel :
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Générer un fichier contenant 1 000 lignes :
+
+```bash
+python -m log_generator.generate_logs --lines 1000 --number 1
+```
+
+Générer plusieurs fichiers :
+
+```bash
+python -m log_generator.generate_multiple_logs \
+	--files 3 \
+	--lines 1000 \
+	--output-dir logs
+```
+
+Lancer l'analyse :
+
+```bash
+python main.py
+python main.py --memory
+python main.py --workers 4
+python main.py --memory --workers 4
+```
+
+### Fish
+
+Créer et activer l'environnement virtuel :
+
+```fish
+python3 -m venv .venv
+source .venv/bin/activate.fish
+pip install -r requirements.txt
+```
+
+Générer un fichier contenant 1 000 lignes :
+
+```fish
+python -m log_generator.generate_logs --lines 1000 --number 1
+```
+
+Générer plusieurs fichiers :
+
+```fish
+python -m log_generator.generate_multiple_logs \
+	--files 3 \
+	--lines 1000 \
+	--output-dir logs
+```
+
+Lancer l'analyse :
+
+```fish
+python main.py
+python main.py --memory
+python main.py --workers 4
+python main.py --memory --workers 4
+```
+
+### Windows PowerShell
+
+Créer et activer l'environnement virtuel :
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+Générer un fichier contenant 1 000 lignes :
+
+```powershell
+python -m log_generator.generate_logs --lines 1000 --number 1
+```
+
+Générer plusieurs fichiers :
+
+```powershell
+python -m log_generator.generate_multiple_logs `
+	--files 3 `
+	--lines 1000 `
+	--output-dir logs
+```
+
+Lancer l'analyse :
+
+```powershell
+python main.py
+python main.py --memory
+python main.py --workers 4
+python main.py --memory --workers 4
+```
+
+Sous `cmd.exe`, l'activation du venv se fait avec :
+
+```bat
+.venv\Scripts\activate.bat
+```
+
+### Options et vérifications
+
+Afficher les options disponibles :
+
+```bash
+python -m log_generator.generate_logs --help
+python -m log_generator.generate_multiple_logs --help
+python main.py --help
+```
+
+Vérifier la syntaxe Python :
+
+```bash
+python -m compileall -q .
+```
+
+Exécuter les tests unitaires :
+
+```bash
+python -m pytest
+```
+
+Vérifier le respect de la norme PEP 8 :
+
+```bash
+pycodestyle --max-line-length=88 main.py log_engine log_generator log_transformation
+```
+
