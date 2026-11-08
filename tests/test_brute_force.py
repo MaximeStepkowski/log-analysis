@@ -43,6 +43,32 @@ def test_success_resets_the_counter_and_allows_a_new_alert():
     assert alerts[0]["attempts"] == 3
 
 
+def test_detection_continues_after_an_alert_and_ignores_other_statuses():
+    records = [
+        http_record("10.0.0.1", 401, 1),
+        http_record("10.0.0.1", 500, 2),
+        http_record("10.0.0.1", 401, 3),
+        http_record("10.0.0.1", 401, 4),
+        http_record("10.0.0.2", 401, 5),
+        http_record("10.0.0.2", 401, 6),
+        http_record("10.0.0.2", 401, 7),
+    ]
+
+    alerts = detect_brute_force(records)
+
+    assert [alert["ip"] for alert in alerts] == ["10.0.0.1", "10.0.0.2"]
+
+
+def test_cycle_without_three_failures_does_not_create_alert():
+    records = [
+        http_record("10.0.0.3", 401, 1),
+        http_record("10.0.0.3", 500, 2),
+        http_record("10.0.0.3", 401, 3),
+    ]
+
+    assert detect_brute_force(records) == []
+
+
 def test_detects_mixed_log_formats_from_directory(tmp_path):
     log_file = tmp_path / "sample.log"
     log_file.write_text(

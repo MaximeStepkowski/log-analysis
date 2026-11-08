@@ -4,7 +4,7 @@ import pytest
 
 import main
 from log_generator import generate_multiple_logs as multiple_logs
-from log_process import brute_force
+from log_process import brute_force_cli
 
 
 def test_main_runs_pipeline_with_cli_options(monkeypatch, capsys):
@@ -84,7 +84,7 @@ def test_brute_force_main_displays_and_writes_alerts(monkeypatch, capsys, tmp_pa
         ],
     )
     monkeypatch.setattr(
-        brute_force,
+        brute_force_cli,
         "detect_brute_force_from_directory",
         lambda directory, pattern="*.log": [
             {
@@ -96,7 +96,7 @@ def test_brute_force_main_displays_and_writes_alerts(monkeypatch, capsys, tmp_pa
         ],
     )
 
-    brute_force.main()
+    brute_force_cli.main()
 
     output = capsys.readouterr().out
     assert "Nombre d'alertes de force brute : 1" in output

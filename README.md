@@ -138,7 +138,7 @@ python main.py --brute-force-output brute_force/mon_rapport.txt
 Lancer la détection des attaques par force brute :
 
 ```fish
-python -m log_process.brute_force
+python -m log_process.brute_force_cli
 ```
 
 La commande analyse les fichiers `.log` du dossier `logs/`. Elle détecte les
@@ -149,10 +149,10 @@ enregistré dans `brute_force/brute_force_report.txt`.
 Options disponibles :
 
 ```fish
-python -m log_process.brute_force --help
-python -m log_process.brute_force --directory autre_dossier
-python -m log_process.brute_force --pattern "*.log"
-python -m log_process.brute_force --output brute_force/mon_rapport.txt
+python -m log_process.brute_force_cli --help
+python -m log_process.brute_force_cli --directory autre_dossier
+python -m log_process.brute_force_cli --pattern "*.log"
+python -m log_process.brute_force_cli --output brute_force/mon_rapport.txt
 ```
 
 ### Windows PowerShell
