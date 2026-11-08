@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -6,6 +6,8 @@ from log_generator.generate_logs import (
     generate_http_log_line,
     generate_huge_log_file,
     get_output_file,
+    random_log_rate,
+    random_start_datetime,
 )
 from log_generator.generate_multiple_logs import generate_multiple_logs
 
@@ -50,6 +52,50 @@ def test_generate_huge_log_file_writes_requested_lines(tmp_path, monkeypatch):
         "test-line",
         "test-line",
     ]
+
+
+def test_generate_huge_log_file_returns_last_timestamp(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "log_generator.generate_logs.generate_http_log_line",
+        lambda timestamp: timestamp.isoformat(),
+    )
+    start = datetime(2026, 11, 5, 12, 0, 0)
+
+    last_timestamp = generate_huge_log_file(
+        tmp_path / "logs.log",
+        total_lines=3,
+        batch_size=2,
+        start_datetime=start,
+        log_rate=2,
+    )
+
+    assert last_timestamp == start + timedelta(seconds=1.5)
+
+
+def test_generate_multiple_logs_do_not_overlap(tmp_path, monkeypatch):
+    timestamps = {}
+
+    def fake_generate(filename, total_lines, max_rate, batch_size, start, rate):
+        timestamps[filename.name] = start
+        return start + timedelta(seconds=total_lines / rate)
+
+    monkeypatch.setattr(
+        "log_generator.generate_multiple_logs.generate_huge_log_file",
+        fake_generate,
+    )
+    monkeypatch.setattr(
+        "log_generator.generate_multiple_logs.random_start_datetime",
+        lambda: datetime(2026, 11, 5, 12, 0, 0),
+    )
+
+    monkeypatch.setattr(
+        "log_generator.generate_multiple_logs.random_log_rate",
+        lambda: 10,
+    )
+
+    generate_multiple_logs(2, 20, tmp_path)
+
+    assert timestamps["logs_file_http_2.log"] == datetime(2026, 11, 5, 12, 0, 2)
 
 
 @pytest.mark.parametrize(
