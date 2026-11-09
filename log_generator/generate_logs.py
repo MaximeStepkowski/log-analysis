@@ -11,6 +11,9 @@ DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "logs"
 TOTAL_LINES = 1_000_000  # Nombre de lignes souhaité
 BATCH_SIZE = 50_000      # Écriture par blocs pour optimiser les I/O disque
 IO_BUFFER_SIZE = 1024 * 1024
+DEFAULT_LOG_RATE = 20.0
+MIN_LOG_RATE = 10.0
+MAX_LOG_RATE = 30.0
 
 
 def get_output_file(
@@ -170,6 +173,7 @@ def generate_http_log_line(
             f'{bytes_sent} "{referer}" "{user_agent}"'
         )
 
+
     elif format_type == "json":
         # Format JSON structuré pour Kibana / Loki
         payload = {
@@ -197,19 +201,33 @@ def generate_http_log_line(
         )
 
 
+def random_start_datetime() -> datetime:
+    """Retourne un début aléatoire situé dans les 30 derniers jours."""
+    return datetime.now() - timedelta(days=random.uniform(7, 30))
+
+
+def random_log_rate() -> float:
+    """Retourne un débit réaliste aléatoire en logs par seconde."""
+    return random.uniform(MIN_LOG_RATE, MAX_LOG_RATE)
+
+
 def generate_huge_log_file(
     filename: str | Path,
     total_lines: int,
     max_lines_per_second: int | None = None,
     batch_size: int = BATCH_SIZE,
-) -> None:
-    """Génère le fichier de logs par lots (buffers) optimisés."""
+    start_datetime: datetime | None = None,
+    log_rate: float = DEFAULT_LOG_RATE,
+) -> datetime:
+    """Génère un fichier et retourne le timestamp de sa dernière ligne."""
     if total_lines < 0:
         raise ValueError("Le nombre de lignes doit être supérieur ou égal à 0.")
     if max_lines_per_second is not None and max_lines_per_second < 1:
         raise ValueError("La cadence maximale doit être supérieure ou égale à 1.")
     if batch_size < 1:
         raise ValueError("La taille de lot doit être supérieure ou égale à 1.")
+    if log_rate <= 0:
+        raise ValueError("Le débit de logs doit être supérieur à 0.")
 
     output_path = Path(filename)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -217,8 +235,8 @@ def generate_huge_log_file(
     print(f"Début de la génération de {total_lines:,} logs HTTP dans '{filename}'...")
     start_time = time.time()
 
-    current_date = datetime.now() - timedelta(days=7)  # Commence il y a 7 jours
-    time_increment = timedelta(seconds=0.05)  # ~20 requêtes HTTP par seconde
+    current_date = start_datetime or random_start_datetime()
+    time_increment = timedelta(seconds=1 / log_rate)
 
     written_lines = 0
     buffer = []
@@ -250,6 +268,7 @@ def generate_huge_log_file(
 
     elapsed = time.time() - start_time
     print(f"Terminé en {elapsed:.2f} secondes ! Fichier créé : {filename}")
+    return current_date
 
 
 if __name__ == "__main__":
@@ -283,6 +302,15 @@ if __name__ == "__main__":
         default=BATCH_SIZE,
         help=f"Nombre de lignes écrites par lot (défaut : {BATCH_SIZE}).",
     )
+    parser.add_argument(
+        "--log-rate",
+        type=float,
+        default=DEFAULT_LOG_RATE,
+        help=(
+            "Débit utilisé pour les timestamps (logs/s, "
+            f"défaut : {DEFAULT_LOG_RATE:g})."
+        ),
+    )
     arguments = parser.parse_args()
 
     try:
@@ -291,6 +319,7 @@ if __name__ == "__main__":
             arguments.lines,
             arguments.max_rate,
             arguments.batch_size,
+            log_rate=arguments.log_rate,
         )
     except ValueError as error:
         raise SystemExit(f"Erreur : {error}") from error

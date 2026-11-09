@@ -77,6 +77,9 @@ python -m log_generator.generate_multiple_logs \
 	--output-dir logs
 ```
 
+Le débit temporel est choisi automatiquement et reste identique pour la série
+de fichiers, afin que leur durée soit proportionnelle au nombre de lignes.
+
 Lancer l'analyse :
 
 ```bash
@@ -111,6 +114,9 @@ python -m log_generator.generate_multiple_logs \
 	--output-dir logs
 ```
 
+Le débit temporel est choisi automatiquement et reste identique pour la série
+de fichiers, afin que leur durée soit proportionnelle au nombre de lignes.
+
 Lancer l'analyse :
 
 ```fish
@@ -118,6 +124,35 @@ python main.py
 python main.py --memory
 python main.py --workers 4
 python main.py --memory --workers 4
+```
+
+`main.py` lance également la détection brute force pendant le parsing déjà
+effectué. Les logs ne sont donc pas relus une seconde fois. Le rapport est
+écrit par défaut dans `brute_force/brute_force_report.txt`. Pour choisir un
+autre fichier :
+
+```fish
+python main.py --brute-force-output brute_force/mon_rapport.txt
+```
+
+Lancer la détection des attaques par force brute :
+
+```fish
+python -m log_process.brute_force_cli
+```
+
+La commande analyse les fichiers `.log` du dossier `logs/`. Elle détecte les
+adresses IP ayant au moins trois échecs de connexion consécutifs (`401` ou
+`403`) et affiche les alertes dans le terminal. Le rapport est également
+enregistré dans `brute_force/brute_force_report.txt`.
+
+Options disponibles :
+
+```fish
+python -m log_process.brute_force_cli --help
+python -m log_process.brute_force_cli --directory autre_dossier
+python -m log_process.brute_force_cli --pattern "*.log"
+python -m log_process.brute_force_cli --output brute_force/mon_rapport.txt
 ```
 
 ### Windows PowerShell
@@ -144,6 +179,9 @@ python -m log_generator.generate_multiple_logs `
 	--lines 1000 `
 	--output-dir logs
 ```
+
+Le débit temporel est choisi automatiquement et reste identique pour la série
+de fichiers, afin que leur durée soit proportionnelle au nombre de lignes.
 
 Lancer l'analyse :
 

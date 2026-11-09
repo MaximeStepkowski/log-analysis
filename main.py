@@ -11,6 +11,7 @@ from pathlib import Path
 from log_engine.ingestion import read_logs_from_directory
 from log_engine.memory import get_current_memory_bytes, get_peak_memory_bytes
 from log_engine.parsing import parse_logs_parallel
+from log_process.brute_force import BruteForceDetector, write_report
 from log_transformation.tracker import Tracker
 
 
@@ -26,6 +27,14 @@ def main() -> None:
         type=int,
         default=1,
         help="Nombre de processus de parsing (1 désactive le parallélisme).",
+    )
+    parser.add_argument(
+        "--brute-force-output",
+        type=Path,
+        default=Path(__file__).resolve().parent
+        / "brute_force"
+        / "brute_force_report.txt",
+        help="Rapport force brute produit pendant l'analyse.",
     )
     arguments = parser.parse_args()
 
@@ -48,6 +57,7 @@ def main() -> None:
     preview_limit = 3
     tracker = Tracker(sample_size=preview_limit)
     valid_stream = filter(tracker, parsed_stream)
+    brute_force_detector = BruteForceDetector()
 
     valid_records = 0
     sample_interval = 10_000
@@ -58,6 +68,8 @@ def main() -> None:
     for record in valid_stream:
 
         valid_records += 1
+        if "ip" in record and "status" in record:
+            brute_force_detector.process(record)
 
         if tracker.seen % progress_interval == 0:
             elapsed = time.time() - start_time
@@ -82,6 +94,7 @@ def main() -> None:
     else:
         peak_mem = 0
     elapsed_time = time.time() - start_time
+    write_report(brute_force_detector.alerts, arguments.brute_force_output)
 
     # 4. Calculs de la RAM (en Mégaoctets - Mo)
     peak_ram_mb = peak_mem / (1024 * 1024)
@@ -128,6 +141,11 @@ def main() -> None:
         print(f" Record {index} : [{kind}] {description}")
         print(f"             {record}")
     print("=======================================================")
+    print(
+        f"\n=== RAPPORT FORCE BRUTE ===\n"
+        f" Alertes détectées : {len(brute_force_detector.alerts)}\n"
+        f" Rapport écrit dans : {arguments.brute_force_output}"
+    )
 
 
 if __name__ == "__main__":

@@ -3,7 +3,14 @@
 import argparse
 from pathlib import Path
 
-from log_generator.generate_logs import get_output_file, generate_huge_log_file
+from datetime import datetime
+
+from log_generator.generate_logs import (
+    generate_huge_log_file,
+    get_output_file,
+    random_log_rate,
+    random_start_datetime,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -62,16 +69,19 @@ def generate_multiple_logs(
         raise ValueError("Le nombre de fichiers doit être supérieur ou égal à 1.")
     if line_count < 0:
         raise ValueError("Le nombre de lignes doit être supérieur ou égal à 0.")
-
     output_dir.mkdir(parents=True, exist_ok=True)
+    current_start: datetime = random_start_datetime()
+    log_rate = random_log_rate()
 
     for file_number in range(1, file_count + 1):
         output_file = get_output_file(file_number, output_dir)
-        generate_huge_log_file(
+        current_start = generate_huge_log_file(
             output_file,
             line_count,
             max_lines_per_second,
             batch_size,
+            current_start,
+            log_rate,
         )
 
 

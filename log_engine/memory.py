@@ -11,6 +11,8 @@ except ImportError:  # pragma: no cover - disponible sous Unix uniquement
 
 
 if sys.platform == "win32":
+    from ctypes import wintypes
+
     class MemoryCounters(ctypes.Structure):
         """Windows structure used by GetProcessMemoryInfo."""
 
@@ -27,19 +29,30 @@ if sys.platform == "win32":
             ("PeakPagefileUsage", ctypes.c_size_t),
         ]
 
+    _KERNEL32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    _PSAPI = ctypes.WinDLL("psapi", use_last_error=True)
+
+    _KERNEL32.GetCurrentProcess.argtypes = []
+    _KERNEL32.GetCurrentProcess.restype = wintypes.HANDLE
+    _PSAPI.GetProcessMemoryInfo.argtypes = [
+        wintypes.HANDLE,
+        ctypes.POINTER(MemoryCounters),
+        wintypes.DWORD,
+    ]
+    _PSAPI.GetProcessMemoryInfo.restype = wintypes.BOOL
+
 
 def get_windows_memory() -> tuple[int, int]:
     """Retourne le RSS courant et le pic RSS sous Windows."""
     counters = MemoryCounters()
     counters.cb = ctypes.sizeof(counters)
-    process = ctypes.windll.kernel32.GetCurrentProcess()
-    success = ctypes.windll.psapi.GetProcessMemoryInfo(
-        process,
+    success = _PSAPI.GetProcessMemoryInfo(
+        _KERNEL32.GetCurrentProcess(),
         ctypes.byref(counters),
         counters.cb,
     )
     if not success:
-        return 0, 0
+        raise ctypes.WinError(ctypes.get_last_error())
     return counters.WorkingSetSize, counters.PeakWorkingSetSize
 
 
