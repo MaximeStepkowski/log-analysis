@@ -17,6 +17,13 @@ except ImportError:  # pragma: no cover - disponible sous Unix uniquement
 
 from log_engine.ingestion import read_logs_from_directory
 from log_engine.parsing import parse_logs_parallel
+from log_processing.ip_sets import (
+    IPCollector,
+    compare_with_blacklist,
+    format_ip_report,
+    load_blacklist,
+    track_ips,
+)
 from log_transformation.Tracker import Tracker
 
 
@@ -91,10 +98,22 @@ def main() -> None:
         default=1,
         help="Nombre de processus de parsing (1 désactive le parallélisme).",
     )
+    parser.add_argument(
+        "--ip-report-output",
+        type=Path,
+        default=Path(__file__).resolve().parent / "reports" / "ip_report.txt",
+        help="Chemin du rapport complet des adresses IP.",
+    )
     arguments = parser.parse_args()
 
     if arguments.workers < 1:
         parser.error("--workers doit être supérieur ou égal à 1")
+
+    try:
+        blacklist = load_blacklist()
+    except (FileNotFoundError, PermissionError, ValueError) as error:
+        print(f"Erreur de chargement de la liste noire : {error}", file=sys.stderr)
+        raise SystemExit(1) from error
 
     logs_directory = Path(__file__).resolve().parent / "logs"
 
@@ -109,7 +128,11 @@ def main() -> None:
     parsed_stream = parse_logs_parallel(raw_stream, arguments.workers)
     preview_limit = 3
     tracker = Tracker(sample_size=preview_limit)
-    valid_stream = filter(tracker, parsed_stream)
+    ip_collector = IPCollector()
+    valid_stream = track_ips(
+        filter(lambda record: tracker(record), parsed_stream),
+        ip_collector,
+    )
     
     valid_records = 0
     sample_interval = 10_000
@@ -189,6 +212,32 @@ def main() -> None:
         print(f" Record {index} : [{kind}] {description}")
         print(f"             {record}")
     print("=======================================================")
+
+    ip_report = compare_with_blacklist(
+        blacklist,
+        ip_collector.active_ips,
+        ip_collector.error_ips,
+    )
+    print(format_ip_report(ip_collector, ip_report))
+
+    report_path = arguments.ip_report_output
+    try:
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        full_report = format_ip_report(
+            ip_collector,
+            ip_report,
+            limit=max(len(ip_report.known_ips), 1),
+        )
+        report_path.write_text(
+            "Rapport IP des logs (listes complètes)\n"
+            "Source : dossier logs/\n"
+            f"{full_report.lstrip()}\n",
+            encoding="utf-8",
+        )
+    except OSError as error:
+        print(f"Erreur d'écriture du rapport IP : {error}", file=sys.stderr)
+        raise SystemExit(1) from error
+    print(f"\nRapport IP enregistré dans : {report_path}")
 
 
 if __name__ == "__main__":
