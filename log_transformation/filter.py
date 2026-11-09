@@ -11,6 +11,7 @@ VALID_LEVELS = {"INFO", "WARNING", "ERROR", "CRITICAL"}
 # VERIFICATION DE LA STRUCTURE DES LOGS
 # ============================================================
 
+
 def valid_log(log: Any) -> bool:
     """
     Vérifie que le log possède une structure exploitable.

@@ -11,6 +11,9 @@ DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "logs"
 TOTAL_LINES = 1_000_000  # Nombre de lignes souhaité
 BATCH_SIZE = 50_000      # Écriture par blocs pour optimiser les I/O disque
 IO_BUFFER_SIZE = 1024 * 1024
+DEFAULT_LOG_RATE = 20.0
+MIN_LOG_RATE = 10.0
+MAX_LOG_RATE = 30.0
 
 
 def get_output_file(
@@ -23,8 +26,13 @@ def get_output_file(
 
     return Path(output_dir) / f"logs_file_http_{file_number}.log"
 
+
 # --- JEUX DE DONNÉES HTTP ---
-IP_POOL = [f"192.168.1.{i}" for i in range(1, 100)] + [f"10.0.0.{i}" for i in range(1, 50)] + [f"172.16.0.{i}" for i in range(1, 30)]
+IP_POOL = (
+    [f"192.168.1.{i}" for i in range(1, 100)]
+    + [f"10.0.0.{i}" for i in range(1, 50)]
+    + [f"172.16.0.{i}" for i in range(1, 30)]
+)
 BLACKLISTED_IPS = ["192.168.1.66", "10.0.0.99", "172.16.0.4"]
 ALL_IPS = IP_POOL + BLACKLISTED_IPS
 # IP dédiée à la simulation d'attaque Web (Force Brute / Fuzzing)
@@ -39,7 +47,10 @@ WEIGHTED_METHODS = [
 ]
 
 STATUS_CODES = [200, 201, 301, 304, 400, 401, 403, 404, 500, 502, 503]
-STATUS_WEIGHTS = [0.70, 0.08, 0.05, 0.05, 0.03, 0.02, 0.02, 0.03, 0.01, 0.005, 0.005]
+STATUS_WEIGHTS = [
+    0.70, 0.08, 0.05, 0.05, 0.03, 0.02,
+    0.02, 0.03, 0.01, 0.005, 0.005,
+]
 WEIGHTED_STATUS_CODES = [
     status
     for status, weight in zip(STATUS_CODES, STATUS_WEIGHTS)
@@ -54,8 +65,15 @@ ENDPOINTS = [
 ]
 
 USER_AGENTS = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+    (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ),
+    (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 "
+        "Safari/605.1.15"
+    ),
     "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0",
     "Python-urllib/3.10",
     "curl/7.68.0",
@@ -99,7 +117,7 @@ def generate_http_log_line(
             "",                                      # Ligne totalement vide
             " ",                                     # Un seul espace
             "           ",                           # Multiples espaces
-            "\t\t   "                                # Mélange de tabulations et d'espaces
+            "\t\t   "  # Mélange de tabulations et d'espaces
         ]
         return random.choice(empty_types)
 
@@ -109,8 +127,9 @@ def generate_http_log_line(
             "CORRUPTED_DATA_NULL_BYTES_\x00\x00\x00",
             # Tronqué (manque status & bytes)
             "192.168.1.1 - - [05/Nov/2026:12:00:00 +0000] \"GET / HTTP/1.1\"",
-            '{"timestamp": "2026-11-05T12:00:00Z", "ip": ',                   # JSON invalide
-            "2026-99-99 99:99:99 HTTP INVALID_TIMESTAMP",                     # Horodatage absurde
+            '{"timestamp": "2026-11-05T12:00:00Z", "ip": ',
+            # JSON invalide
+            "2026-99-99 99:99:99 HTTP INVALID_TIMESTAMP",
             # Format brut sans IP/Date
             "GET /admin/login HTTP/1.1 401 512"
         ]
@@ -145,9 +164,15 @@ def generate_http_log_line(
     format_type = random.choice(WEIGHTED_FORMAT_TYPES)
 
     if format_type == "combined":
-        # Format Combined enrichi : IP:PORT - - [Date] "METHOD URL PROTO" STATUS BYTES "REFERER" "USER-AGENT"
+        # Format Combined enrichi : IP:PORT - - [Date] "METHOD URL PROTO" STATUS
+        # BYTES "REFERER" "USER-AGENT"
         ts_combined = timestamp_dt.strftime("%d/%b/%Y:%H:%M:%S +0000")
-        return f'{ip}:{client_port} - - [{ts_combined}] "{method} {endpoint} {http_version}" {status} {bytes_sent} "{referer}" "{user_agent}"'
+        return (
+            f'{ip}:{client_port} - - [{ts_combined}] '
+            f'"{method} {endpoint} {http_version}" {status} '
+            f'{bytes_sent} "{referer}" "{user_agent}"'
+        )
+
 
     elif format_type == "json":
         # Format JSON structuré pour Kibana / Loki
@@ -168,7 +193,22 @@ def generate_http_log_line(
     else:
         # Format Key-Value
         ts_kv = timestamp_dt.strftime("%Y-%m-%d %H:%M:%S")
-        return f'time="{ts_kv}" client_ip={ip} client_port={client_port} method={method} path="{endpoint}" status={status} bytes={bytes_sent} duration_ms={response_time_ms} agent="{user_agent}"'
+        return (
+            f'time="{ts_kv}" client_ip={ip} client_port={client_port} '
+            f'method={method} path="{endpoint}" status={status} '
+            f'bytes={bytes_sent} duration_ms={response_time_ms} '
+            f'agent="{user_agent}"'
+        )
+
+
+def random_start_datetime() -> datetime:
+    """Retourne un début aléatoire situé dans les 30 derniers jours."""
+    return datetime.now() - timedelta(days=random.uniform(7, 30))
+
+
+def random_log_rate() -> float:
+    """Retourne un débit réaliste aléatoire en logs par seconde."""
+    return random.uniform(MIN_LOG_RATE, MAX_LOG_RATE)
 
 
 def generate_huge_log_file(
@@ -176,14 +216,18 @@ def generate_huge_log_file(
     total_lines: int,
     max_lines_per_second: int | None = None,
     batch_size: int = BATCH_SIZE,
-) -> None:
-    """Génère le fichier de logs par lots (buffers) optimisés."""
+    start_datetime: datetime | None = None,
+    log_rate: float = DEFAULT_LOG_RATE,
+) -> datetime:
+    """Génère un fichier et retourne le timestamp de sa dernière ligne."""
     if total_lines < 0:
         raise ValueError("Le nombre de lignes doit être supérieur ou égal à 0.")
     if max_lines_per_second is not None and max_lines_per_second < 1:
         raise ValueError("La cadence maximale doit être supérieure ou égale à 1.")
     if batch_size < 1:
         raise ValueError("La taille de lot doit être supérieure ou égale à 1.")
+    if log_rate <= 0:
+        raise ValueError("Le débit de logs doit être supérieur à 0.")
 
     output_path = Path(filename)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -191,8 +235,8 @@ def generate_huge_log_file(
     print(f"Début de la génération de {total_lines:,} logs HTTP dans '{filename}'...")
     start_time = time.time()
 
-    current_date = datetime.now() - timedelta(days=7)  # Commence il y a 7 jours
-    time_increment = timedelta(seconds=0.05)  # ~20 requêtes HTTP par seconde
+    current_date = start_datetime or random_start_datetime()
+    time_increment = timedelta(seconds=1 / log_rate)
 
     written_lines = 0
     buffer = []
@@ -209,7 +253,11 @@ def generate_huge_log_file(
                 f.writelines(buffer)
                 buffer.clear()
                 written_lines = i
-                print(f"Progression : {written_lines:,} / {total_lines:,} lignes ({(written_lines/total_lines)*100:.1f}%)")
+                progress = written_lines / total_lines * 100
+                print(
+                    f"Progression : {written_lines:,} / {total_lines:,} "
+                    f"lignes ({progress:.1f}%)"
+                )
                 if max_lines_per_second is not None:
                     target_elapsed = written_lines / max_lines_per_second
                     time.sleep(max(0, target_elapsed - (time.time() - start_time)))
@@ -220,6 +268,7 @@ def generate_huge_log_file(
 
     elapsed = time.time() - start_time
     print(f"Terminé en {elapsed:.2f} secondes ! Fichier créé : {filename}")
+    return current_date
 
 
 if __name__ == "__main__":
@@ -242,13 +291,25 @@ if __name__ == "__main__":
         "--max-rate",
         type=int,
         default=None,
-        help="Limite le nombre de lignes générées par seconde pour réduire la charge CPU.",
+        help=(
+            "Limite le nombre de lignes générées par seconde "
+            "pour réduire la charge CPU."
+        ),
     )
     parser.add_argument(
         "--batch-size",
         type=int,
         default=BATCH_SIZE,
         help=f"Nombre de lignes écrites par lot (défaut : {BATCH_SIZE}).",
+    )
+    parser.add_argument(
+        "--log-rate",
+        type=float,
+        default=DEFAULT_LOG_RATE,
+        help=(
+            "Débit utilisé pour les timestamps (logs/s, "
+            f"défaut : {DEFAULT_LOG_RATE:g})."
+        ),
     )
     arguments = parser.parse_args()
 
@@ -258,6 +319,7 @@ if __name__ == "__main__":
             arguments.lines,
             arguments.max_rate,
             arguments.batch_size,
+            log_rate=arguments.log_rate,
         )
     except ValueError as error:
         raise SystemExit(f"Erreur : {error}") from error
