@@ -1,0 +1,11 @@
+# Liste noire d'adresses IP (une adresse par ligne, '#' pour un commentaire).
+# Chargée dans un frozenset : la liste ne peut plus être modifiée une fois lue.
+
+# IP blacklistées présentes dans le jeu de données généré (log_generator)
+192.168.1.66
+10.0.0.99
+172.16.0.4
+
+# IP blacklistées sans activité dans les logs (plages de documentation RFC 5737)
+203.0.113.7
+198.51.100.23

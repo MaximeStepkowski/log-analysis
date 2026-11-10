@@ -4,15 +4,87 @@ Mesure du pic de RAM et calcul de la moyenne de consommation mémoire.
 """
 
 import argparse
+import os
 import sys
 import time
 from pathlib import Path
 
+try:
+    import resource
+except ImportError:  # pragma: no cover - disponible sous Unix uniquement
+    resource = None
+
 from log_engine.ingestion import read_logs_from_directory
 from log_engine.memory import get_current_memory_bytes, get_peak_memory_bytes
 from log_engine.parsing import parse_logs_parallel
+from log_processing.ip_sets import (
+    IPCollector,
+    compare_with_blacklist,
+    format_ip_report,
+    load_blacklist,
+    track_ips,
+)
+
 from log_process.brute_force import BruteForceDetector, write_report
 from log_transformation.tracker import Tracker
+
+
+if sys.platform == "win32":
+    class MemoryCounters(ctypes.Structure):
+        _fields_ = [
+            ("cb", ctypes.c_ulong),
+            ("PageFaultCount", ctypes.c_ulong),
+            ("PeakWorkingSetSize", ctypes.c_size_t),
+            ("WorkingSetSize", ctypes.c_size_t),
+            ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+            ("PagefileUsage", ctypes.c_size_t),
+            ("PeakPagefileUsage", ctypes.c_size_t),
+        ]
+
+
+def get_windows_memory() -> tuple[int, int]:
+    """Retourne le RSS courant et le pic RSS sous Windows."""
+    counters = MemoryCounters()
+    counters.cb = ctypes.sizeof(counters)
+    process = ctypes.windll.kernel32.GetCurrentProcess()
+    success = ctypes.windll.psapi.GetProcessMemoryInfo(
+        process,
+        ctypes.byref(counters),
+        counters.cb,
+    )
+    if not success:
+        return 0, 0
+    return counters.WorkingSetSize, counters.PeakWorkingSetSize
+
+
+def get_current_memory_bytes() -> int:
+    """Retourne la mémoire résidente courante du processus."""
+    if sys.platform == "win32":
+        return get_windows_memory()[0]
+
+    try:
+        with open("/proc/self/statm", encoding="ascii") as statm_file:
+            resident_pages = int(statm_file.readline().split()[1])
+        return resident_pages * os.sysconf("SC_PAGE_SIZE")
+    except (OSError, IndexError, ValueError):
+        return 0
+
+
+def get_peak_memory_bytes() -> int:
+    """Retourne le pic RSS en octets selon le système d'exploitation."""
+    if sys.platform == "win32":
+        return get_windows_memory()[1]
+
+    if resource is None:
+        return 0
+
+    peak_memory = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    if sys.platform == "linux":
+        return peak_memory * 1024
+    return peak_memory
 
 
 def main() -> None:
@@ -29,6 +101,12 @@ def main() -> None:
         help="Nombre de processus de parsing (1 désactive le parallélisme).",
     )
     parser.add_argument(
+        "--ip-report-output",
+        type=Path,
+        default=Path(__file__).resolve().parent / "reports" / "ip_report.txt",
+        help="Chemin du rapport complet des adresses IP.",
+    )
+    parser.add_argument(
         "--brute-force-output",
         type=Path,
         default=Path(__file__).resolve().parent
@@ -40,6 +118,12 @@ def main() -> None:
 
     if arguments.workers < 1:
         parser.error("--workers doit être supérieur ou égal à 1")
+
+    try:
+        blacklist = load_blacklist()
+    except (FileNotFoundError, PermissionError, ValueError) as error:
+        print(f"Erreur de chargement de la liste noire : {error}", file=sys.stderr)
+        raise SystemExit(1) from error
 
     logs_directory = Path(__file__).resolve().parent / "logs"
 
@@ -56,7 +140,12 @@ def main() -> None:
     parsed_stream = parse_logs_parallel(raw_stream, arguments.workers)
     preview_limit = 3
     tracker = Tracker(sample_size=preview_limit)
-    valid_stream = filter(tracker, parsed_stream)
+    ip_collector = IPCollector()
+    
+    valid_stream = track_ips(
+        filter(lambda record: tracker(record), parsed_stream),
+        ip_collector,
+    )
     brute_force_detector = BruteForceDetector()
 
     valid_records = 0
@@ -146,6 +235,32 @@ def main() -> None:
         f" Alertes détectées : {len(brute_force_detector.alerts)}\n"
         f" Rapport écrit dans : {arguments.brute_force_output}"
     )
+
+    ip_report = compare_with_blacklist(
+        blacklist,
+        ip_collector.active_ips,
+        ip_collector.error_ips,
+    )
+    print(format_ip_report(ip_collector, ip_report))
+
+    report_path = arguments.ip_report_output
+    try:
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        full_report = format_ip_report(
+            ip_collector,
+            ip_report,
+            limit=max(len(ip_report.known_ips), 1),
+        )
+        report_path.write_text(
+            "Rapport IP des logs (listes complètes)\n"
+            "Source : dossier logs/\n"
+            f"{full_report.lstrip()}\n",
+            encoding="utf-8",
+        )
+    except OSError as error:
+        print(f"Erreur d'écriture du rapport IP : {error}", file=sys.stderr)
+        raise SystemExit(1) from error
+    print(f"\nRapport IP enregistré dans : {report_path}")
 
 
 if __name__ == "__main__":
