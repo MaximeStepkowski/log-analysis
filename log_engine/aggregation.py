@@ -1,13 +1,4 @@
-"""Module 3.2 : accumulation dynamique des compteurs via ``defaultdict``.
-
-Tous les compteurs reposent sur :class:`collections.defaultdict`, ce qui permet
-d'incrémenter une clé inconnue sans jamais lever de ``KeyError`` ni tester son
-existence au préalable.
-
-L'agrégation se fait en **une seule passe** sur le flux : un pipeline de logs est
-un itérateur à usage unique, on ne peut donc pas le parcourir une fois par
-critère de comptage.
-"""
+"""Comptage des occurrences par catégorie, niveau et utilisateur (defaultdict)."""
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable
@@ -20,23 +11,22 @@ Record: TypeAlias = dict[str, Any]
 Counter: TypeAlias = defaultdict[str, int]
 NestedCounter: TypeAlias = defaultdict[str, Counter]
 
-#: Valeur de repli lorsqu'un enregistrement ne porte pas le champ attendu.
 UNKNOWN_KEY = "<inconnu>"
 
 
 def new_counter() -> Counter:
-    """Crée un compteur vide : toute clé absente vaut 0."""
+    """Cree un compteur dont toute cle absente vaut 0."""
     return defaultdict(int)
 
 
 def new_nested_counter() -> NestedCounter:
-    """Crée un compteur à deux niveaux (ex: utilisateur -> niveau)."""
+    """Cree un compteur a deux niveaux (ex: utilisateur -> niveau)."""
     return defaultdict(new_counter)
 
 
 @dataclass
 class CountReport:
-    """Résultat d'une passe d'agrégation sur un flux d'enregistrements."""
+    """Compteurs accumules sur un flux d'enregistrements."""
 
     by_category: Counter = field(default_factory=new_counter)
     by_level: Counter = field(default_factory=new_counter)
@@ -51,15 +41,13 @@ class CountReport:
         return self.total - self.invalid
 
     def update(self, record: Record | None) -> str:
-        """Comptabilise un enregistrement et renvoie sa catégorie.
-
-        Permet d'alimenter le rapport depuis une boucle existante, sans
-        reparcourir le flux une seconde fois.
-        """
+        """Comptabilise un enregistrement et renvoie sa categorie."""
         self.total += 1
         category = category_of(record)
         self.by_category[category] += 1
 
+        # Une ligne rejetee n'a ni niveau ni utilisateur : la compter
+        # fausserait les deux repartitions.
         if record is None or category == "invalid":
             self.invalid += 1
             return category
@@ -68,8 +56,6 @@ class CountReport:
         user = user_of(record)
         self.by_level[level] += 1
         self.by_user[user] += 1
-        # defaultdict imbriqué : ni la clé utilisateur ni la clé niveau
-        # n'ont besoin d'être initialisées.
         self.by_user_level[user][level] += 1
         return category
 
@@ -89,7 +75,7 @@ class CountReport:
 
 
 def category_of(record: Record | None) -> str:
-    """Catégorie d'un enregistrement, déduite du routage match-case."""
+    """Categorie d'un enregistrement, deduite du routage match-case."""
     if record is None:
         return "invalid"
     category, _ = route_log(record)
@@ -97,12 +83,12 @@ def category_of(record: Record | None) -> str:
 
 
 def level_of(record: Record) -> str:
-    """Niveau de sévérité, ou valeur de repli si le champ est absent."""
+    """Niveau de severite, ou valeur de repli si le champ est absent ou vide."""
     return str(record.get("level") or UNKNOWN_KEY)
 
 
 def user_of(record: Record) -> str:
-    """Identifiant utilisateur, ou valeur de repli si le champ est absent."""
+    """Identifiant utilisateur, ou valeur de repli si le champ est absent ou vide."""
     return str(record.get("user") or UNKNOWN_KEY)
 
 
@@ -110,23 +96,7 @@ def count_occurrences(
     records: Iterable[Record],
     key: Callable[[Record], str],
 ) -> Counter:
-    """Compte les occurrences d'un flux selon une fonction de clé.
-
-    La fonction de clé est passée en argument (objet de première classe), ce qui
-    permet de réutiliser le même compteur pour n'importe quel critère.
-
-    Args:
-        records: flux d'enregistrements parsés.
-        key: fonction extrayant la clé de regroupement d'un enregistrement.
-
-    Returns:
-        Un ``defaultdict`` associant chaque clé à son nombre d'occurrences.
-
-    Examples:
-        >>> counts = count_occurrences([{"level": "INFO"}], level_of)
-        >>> counts["INFO"], counts["JAMAIS_VU"]
-        (1, 0)
-    """
+    """Compte les occurrences d'un flux selon une fonction de cle."""
     counts = new_counter()
     for record in records:
         if record is None:
@@ -136,7 +106,7 @@ def count_occurrences(
 
 
 def count_by_level(records: Iterable[Record]) -> Counter:
-    """Compte les enregistrements par niveau de sévérité."""
+    """Compte les enregistrements par niveau de severite."""
     return count_occurrences(records, level_of)
 
 
@@ -146,23 +116,12 @@ def count_by_user(records: Iterable[Record]) -> Counter:
 
 
 def count_by_category(records: Iterable[Record]) -> Counter:
-    """Compte les enregistrements par catégorie de log (routage match-case)."""
+    """Compte les enregistrements par categorie de log."""
     return count_occurrences(records, category_of)
 
 
 def aggregate_counts(records: Iterable[Record | None]) -> CountReport:
-    """Agrège tous les compteurs en une seule passe sur le flux.
-
-    Les lignes rejetées par le parser sont comptées dans ``by_category`` sous la
-    catégorie ``"invalid"`` mais exclues des compteurs par niveau et par
-    utilisateur, qu'elles fausseraient.
-
-    Args:
-        records: flux paresseux d'enregistrements (``parse_logs``, ``map``...).
-
-    Returns:
-        Un :class:`CountReport` renseigné.
-    """
+    """Agrege tous les compteurs en une seule passe sur le flux."""
     report = CountReport()
     for record in records:
         report.update(record)
@@ -170,14 +129,6 @@ def aggregate_counts(records: Iterable[Record | None]) -> CountReport:
 
 
 def most_common(counts: Counter, limit: int | None = None) -> list[tuple[str, int]]:
-    """Trie un compteur par occurrences décroissantes, puis par clé.
-
-    Args:
-        counts: compteur à trier.
-        limit: nombre maximum d'entrées renvoyées (``None`` = toutes).
-
-    Returns:
-        Une liste de couples ``(clé, occurrences)``.
-    """
+    """Trie un compteur par occurrences decroissantes, puis par cle."""
     ranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
     return ranked if limit is None else ranked[:limit]

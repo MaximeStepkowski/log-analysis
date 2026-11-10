@@ -59,9 +59,7 @@ def main() -> None:
     tracker = Tracker(sample_size=preview_limit)
     valid_stream = filter(tracker, parsed_stream)
     brute_force_detector = BruteForceDetector()
-    # Accumulation dynamique des compteurs (defaultdict), dans la meme passe.
-    # Le flux est deja filtre par le Tracker : le rapport ne porte donc que sur
-    # les records valides, le decompte des rejets restant a la charge du Tracker.
+    # Alimente par le flux deja filtre : ne compte que les records valides.
     report = CountReport()
 
     valid_records = 0
