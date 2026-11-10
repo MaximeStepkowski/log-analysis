@@ -4,9 +4,15 @@ Mesure du pic de RAM et calcul de la moyenne de consommation mémoire.
 """
 
 import argparse
+import os
 import sys
 import time
 from pathlib import Path
+
+try:
+    import resource
+except ImportError:  # pragma: no cover - disponible sous Unix uniquement
+    resource = None
 
 from log_engine.ingestion import read_logs_from_directory
 from log_engine.memory import get_current_memory_bytes, get_peak_memory_bytes
@@ -99,6 +105,7 @@ def main() -> None:
         type=Path,
         default=Path(__file__).resolve().parent / "reports" / "ip_report.txt",
         help="Chemin du rapport complet des adresses IP.",
+    )
     parser.add_argument(
         "--brute-force-output",
         type=Path,
