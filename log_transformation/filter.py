@@ -2,19 +2,19 @@ from datetime import datetime
 from typing import Any
 
 # ============================================================
-# CONSTANTES ET CRITERES DE FILTRAGE
+# FILTERING CONSTANTS AND CRITERIA
 # ============================================================
 
 VALID_LEVELS = {"INFO", "WARNING", "ERROR", "CRITICAL"}
 
 # ============================================================
-# VERIFICATION DE LA STRUCTURE DES LOGS
+# LOG STRUCTURE VALIDATION
 # ============================================================
 
 
 def valid_log(log: Any) -> bool:
     """
-    Vérifie que le log possède une structure exploitable.
+    Check that the log has a usable structure.
     """
 
     if not isinstance(log, dict):

@@ -1,4 +1,4 @@
-"""Normalisation des enregistrements de logs déjà parsés."""
+"""Normalize already parsed log records."""
 
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 
 def normalize_record(record: "Record | None") -> "Record | None":
-    """Nettoie et normalise un enregistrement déjà parsé."""
+    """Clean and normalize an already parsed record."""
     if record is None:
         return None
 

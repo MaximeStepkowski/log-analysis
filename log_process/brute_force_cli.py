@@ -1,4 +1,4 @@
-"""Interface en ligne de commande de la détection brute force."""
+"""Command-line interface for brute-force detection."""
 
 import argparse
 import logging
@@ -12,7 +12,7 @@ from log_process.brute_force import (
 
 
 def parse_arguments() -> argparse.Namespace:
-    """Construit les options de la commande de détection."""
+    """Build the detection command options."""
     project_root = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(
         description="Détecte les attaques par force brute dans des logs HTTP."
@@ -33,14 +33,14 @@ def parse_arguments() -> argparse.Namespace:
         "--output",
         "-o",
         type=Path,
-        default=project_root / "brute_force" / "brute_force_report.txt",
-        help="Fichier de sortie (défaut : brute_force/brute_force_report.txt).",
+        default=project_root / "reports" / "brute_force_report.txt",
+        help="Fichier de sortie (défaut : reports/brute_force_report.txt).",
     )
     return parser.parse_args()
 
 
 def main() -> None:
-    """Lance la détection depuis la ligne de commande et affiche les alertes."""
+    """Run detection from the command line and display the alerts."""
     arguments = parse_arguments()
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 

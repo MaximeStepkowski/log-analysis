@@ -5,11 +5,11 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# Configuration du fichier de sortie
+# Output file configuration
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "logs"
-TOTAL_LINES = 1_000_000  # Nombre de lignes souhaité
-BATCH_SIZE = 50_000      # Écriture par blocs pour optimiser les I/O disque
+TOTAL_LINES = 1_000_000  # Requested number of lines
+BATCH_SIZE = 50_000      # Batch writes to optimize disk I/O
 IO_BUFFER_SIZE = 1024 * 1024
 DEFAULT_LOG_RATE = 20.0
 MIN_LOG_RATE = 10.0
@@ -20,14 +20,14 @@ def get_output_file(
     file_number: int = 1,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
 ) -> Path:
-    """Construit le chemin d'un fichier de logs numéroté."""
+    """Build the path of a numbered log file."""
     if file_number < 1:
         raise ValueError("Le numéro du fichier doit être supérieur ou égal à 1.")
 
     return Path(output_dir) / f"logs_file_http_{file_number}.log"
 
 
-# --- JEUX DE DONNÉES HTTP ---
+# --- HTTP DATASETS ---
 IP_POOL = (
     [f"192.168.1.{i}" for i in range(1, 100)]
     + [f"10.0.0.{i}" for i in range(1, 50)]
@@ -35,7 +35,7 @@ IP_POOL = (
 )
 BLACKLISTED_IPS = ["192.168.1.66", "10.0.0.99", "172.16.0.4"]
 ALL_IPS = IP_POOL + BLACKLISTED_IPS
-# IP dédiée à la simulation d'attaque Web (Force Brute / Fuzzing)
+# IP dedicated to simulating a web attack (brute force / fuzzing)
 ATTACKER_IP = "192.168.1.200"
 
 HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"]
@@ -104,28 +104,28 @@ def generate_http_log_line(
     empty_rate: float = 0.003,
 ) -> str:
     """
-    Génère une ligne de log HTTP.
-    Injecte :
-    - Des lignes vides ("") ou d'espaces ("   ").
-    - Des lignes corrompues/malformées.
-    - Des requêtes HTTP normales ou des comportements suspects.
+    Generate an HTTP log line.
+    Inject:
+    - Empty lines ("") or whitespace-only lines ("   ").
+    - Corrupted or malformed lines.
+    - Normal HTTP requests or suspicious behavior.
     """
 
-    # --- INJECTION DE LIGNES VIDES OU ESPACÉES ---
+    # --- EMPTY OR WHITESPACE LINE INJECTION ---
     if random.random() < empty_rate:
         empty_types = [
-            "",                                      # Ligne totalement vide
+            "",                                      # Completely empty line
             " ",                                     # Un seul espace
             "           ",                           # Multiples espaces
-            "\t\t   "  # Mélange de tabulations et d'espaces
+            "\t\t   "  # Mixture of tabs and spaces
         ]
         return random.choice(empty_types)
 
-    # --- INJECTION DE LIGNES CORROMPUES ---
+    # --- CORRUPTED LINE INJECTION ---
     if random.random() < corrupt_rate:
         corrupt_types = [
             "CORRUPTED_DATA_NULL_BYTES_\x00\x00\x00",
-            # Tronqué (manque status & bytes)
+            # Truncated (missing status and bytes)
             "192.168.1.1 - - [05/Nov/2026:12:00:00 +0000] \"GET / HTTP/1.1\"",
             '{"timestamp": "2026-11-05T12:00:00Z", "ip": ',
             # JSON invalide
@@ -135,7 +135,7 @@ def generate_http_log_line(
         ]
         return random.choice(corrupt_types)
 
-    # --- SIMULATION D'ATTAQUE (1%) ---
+    # --- ATTACK SIMULATION (1%) ---
     if random.random() < 0.01:
         ip = ATTACKER_IP
         method = "POST"
@@ -160,11 +160,11 @@ def generate_http_log_line(
 
     http_version = "HTTP/1.1"
 
-    # --- VARIABILITÉ DE FORMAT ---
+    # --- FORMAT VARIATION ---
     format_type = random.choice(WEIGHTED_FORMAT_TYPES)
 
     if format_type == "combined":
-        # Format Combined enrichi : IP:PORT - - [Date] "METHOD URL PROTO" STATUS
+        # Enriched combined format: IP:PORT - - [Date] "METHOD URL PROTOCOL" STATUS
         # BYTES "REFERER" "USER-AGENT"
         ts_combined = timestamp_dt.strftime("%d/%b/%Y:%H:%M:%S +0000")
         return (
@@ -175,7 +175,7 @@ def generate_http_log_line(
 
 
     elif format_type == "json":
-        # Format JSON structuré pour Kibana / Loki
+        # Structured JSON format for Kibana / Loki
         payload = {
             "timestamp": timestamp_dt.isoformat() + "Z",
             "remote_addr": ip,
@@ -202,12 +202,12 @@ def generate_http_log_line(
 
 
 def random_start_datetime() -> datetime:
-    """Retourne un début aléatoire situé dans les 30 derniers jours."""
+    """Return a random start time within the last 30 days."""
     return datetime.now() - timedelta(days=random.uniform(7, 30))
 
 
 def random_log_rate() -> float:
-    """Retourne un débit réaliste aléatoire en logs par seconde."""
+    """Return a realistic random log rate per second."""
     return random.uniform(MIN_LOG_RATE, MAX_LOG_RATE)
 
 
@@ -219,7 +219,7 @@ def generate_huge_log_file(
     start_datetime: datetime | None = None,
     log_rate: float = DEFAULT_LOG_RATE,
 ) -> datetime:
-    """Génère un fichier et retourne le timestamp de sa dernière ligne."""
+    """Generate a file and return the timestamp of its last line."""
     if total_lines < 0:
         raise ValueError("Le nombre de lignes doit être supérieur ou égal à 0.")
     if max_lines_per_second is not None and max_lines_per_second < 1:
@@ -248,7 +248,7 @@ def generate_huge_log_file(
             line = generate_http_log_line(current_date)
             buffer.append(line + "\n")
 
-            # Écriture par blocs pour limiter l'impact I/O et RAM
+            # Write in batches to limit I/O and RAM impact.
             if i % batch_size == 0:
                 f.writelines(buffer)
                 buffer.clear()
@@ -262,7 +262,7 @@ def generate_huge_log_file(
                     target_elapsed = written_lines / max_lines_per_second
                     time.sleep(max(0, target_elapsed - (time.time() - start_time)))
 
-        # Écriture du reste du buffer
+        # Write the remaining buffer.
         if buffer:
             f.writelines(buffer)
 

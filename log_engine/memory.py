@@ -43,7 +43,7 @@ if sys.platform == "win32":
 
 
 def get_windows_memory() -> tuple[int, int]:
-    """Retourne le RSS courant et le pic RSS sous Windows."""
+    """Return the current and peak RSS on Windows."""
     counters = MemoryCounters()
     counters.cb = ctypes.sizeof(counters)
     success = _PSAPI.GetProcessMemoryInfo(
@@ -57,7 +57,7 @@ def get_windows_memory() -> tuple[int, int]:
 
 
 def get_current_memory_bytes() -> int:
-    """Retourne la mémoire résidente courante du processus."""
+    """Return the process's current resident memory."""
     if sys.platform == "win32":
         return get_windows_memory()[0]
 
@@ -70,7 +70,7 @@ def get_current_memory_bytes() -> int:
 
 
 def get_peak_memory_bytes() -> int:
-    """Retourne le pic RSS en octets selon le système d'exploitation."""
+    """Return the peak RSS in bytes for the current operating system."""
     if sys.platform == "win32":
         return get_windows_memory()[1]
 

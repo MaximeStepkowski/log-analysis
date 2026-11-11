@@ -43,6 +43,7 @@ Le projet est découpé en 4 modules principaux respectant les prérequis d'opti
 ### 4. Moteur de Règles & Introspection Dynamique (`Module 4`)
 * **Flexible Rule Engine** : Moteur de sécurité configurable basé sur la fonction maître `apply_security_rules(*args, **kwargs)` traitant les fonctions comme des objets de première classe.
 * **Audit Système & Introspection** : Export d'un rapport sur les variables de portée actuellement chargées en mémoire à l'aide des fonctions `globals()` et `locals()`.
+* **Rapport CLI** : Les règles IP blacklistée, erreurs HTTP répétées et force brute peuvent être exportées dans un rapport texte.
 
 ---
 
@@ -89,6 +90,15 @@ python main.py --workers 4
 python main.py --memory --workers 4
 ```
 
+Une taille de lot de 5 000 lignes est utilisée par défaut pour le parsing
+parallèle. Elle peut être ajustée avec `--batch-size`.
+
+Pour supprimer les messages de progression intermédiaires :
+
+```fish
+python main.py --workers 8 --batch-size 5000 --quiet
+```
+
 ### Fish
 
 Créer et activer l'environnement virtuel :
@@ -128,11 +138,11 @@ python main.py --memory --workers 4
 
 `main.py` lance également la détection brute force pendant le parsing déjà
 effectué. Les logs ne sont donc pas relus une seconde fois. Le rapport est
-écrit par défaut dans `brute_force/brute_force_report.txt`. Pour choisir un
+écrit par défaut dans `reports/brute_force_report.txt`. Pour choisir un
 autre fichier :
 
 ```fish
-python main.py --brute-force-output brute_force/mon_rapport.txt
+python main.py --brute-force-output reports/mon_rapport.txt
 ```
 
 Lancer la détection des attaques par force brute :
@@ -144,7 +154,7 @@ python -m log_process.brute_force_cli
 La commande analyse les fichiers `.log` du dossier `logs/`. Elle détecte les
 adresses IP ayant au moins trois échecs de connexion consécutifs (`401` ou
 `403`) et affiche les alertes dans le terminal. Le rapport est également
-enregistré dans `brute_force/brute_force_report.txt`.
+enregistré dans `reports/brute_force_report.txt`.
 
 Options disponibles :
 
@@ -152,8 +162,18 @@ Options disponibles :
 python -m log_process.brute_force_cli --help
 python -m log_process.brute_force_cli --directory autre_dossier
 python -m log_process.brute_force_cli --pattern "*.log"
-python -m log_process.brute_force_cli --output brute_force/mon_rapport.txt
+python -m log_process.brute_force_cli --output reports/mon_rapport.txt
 ```
+
+Générer le rapport de sécurité du module 4 :
+
+```fish
+python main.py --security-report reports/security_report.txt
+```
+
+Le rapport contient les règles déclenchées, leurs détails et l'audit des noms
+et types de variables des portées inspectées. Les valeurs des variables ne sont
+pas exportées.
 
 ### Windows PowerShell
 

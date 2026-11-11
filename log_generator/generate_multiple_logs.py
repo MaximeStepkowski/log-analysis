@@ -1,4 +1,4 @@
-"""Génère plusieurs fichiers de logs avec une taille configurable."""
+"""Generate multiple log files with a configurable size."""
 
 import argparse
 from pathlib import Path
@@ -64,7 +64,7 @@ def generate_multiple_logs(
     max_lines_per_second: int | None = None,
     batch_size: int = 50_000,
 ) -> None:
-    """Génère ``file_count`` fichiers contenant chacun ``line_count`` lignes."""
+    """Generate ``file_count`` files, each containing ``line_count`` lines."""
     if file_count < 1:
         raise ValueError("Le nombre de fichiers doit être supérieur ou égal à 1.")
     if line_count < 0:

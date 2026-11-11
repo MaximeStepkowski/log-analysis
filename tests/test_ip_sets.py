@@ -109,7 +109,7 @@ def test_compare_with_blacklist_returns_only_immutable_sets():
 
     report = compare_with_blacklist(blacklist, active, set())
 
-    # set - frozenset renvoie un set : le rapport doit tout de même être figé
+    # set - frozenset returns a set, so the report must still be immutable.
     assert isinstance(active - blacklist, set)
     for name in (
         "blacklist",

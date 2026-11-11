@@ -26,7 +26,9 @@ def test_main_runs_pipeline_with_cli_options(monkeypatch, capsys):
         main, "read_logs_from_directory", lambda directory: iter([])
     )
     monkeypatch.setattr(
-        main, "parse_logs_parallel", lambda lines, workers: iter(records)
+        main,
+        "parse_logs_parallel",
+        lambda lines, workers, batch_size=2_000: iter(records),
     )
     monkeypatch.setattr(main, "get_current_memory_bytes", lambda: 1024)
     monkeypatch.setattr(main, "get_peak_memory_bytes", lambda: 2048)
@@ -41,6 +43,13 @@ def test_main_runs_pipeline_with_cli_options(monkeypatch, capsys):
 
 def test_main_rejects_invalid_worker_count(monkeypatch):
     monkeypatch.setattr(sys, "argv", ["main.py", "--workers", "0"])
+
+    with pytest.raises(SystemExit):
+        main.main()
+
+
+def test_main_rejects_invalid_batch_size(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["main.py", "--batch-size", "0"])
 
     with pytest.raises(SystemExit):
         main.main()
