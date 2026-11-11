@@ -9,6 +9,10 @@ def test_get_current_memory_bytes_returns_non_negative_value():
     assert memory.get_current_memory_bytes() >= 0
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="/proc/self/statm is only read on non-Windows platforms",
+)
 def test_get_current_memory_bytes_returns_zero_when_proc_file_is_invalid(monkeypatch):
     def raise_os_error(*args, **kwargs):
         raise OSError
