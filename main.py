@@ -4,6 +4,7 @@ Measure peak RAM and calculate average memory usage.
 """
 
 import argparse
+import ctypes
 import os
 import sys
 import time
@@ -97,6 +98,88 @@ def get_peak_memory_bytes() -> int:
     return peak_memory
 
 
+def format_count_report(report: CountReport) -> str:
+    """Build the summary report for category and user counts."""
+    lines = [
+        "=== COMPTAGE PAR CATÉGORIE ET PAR UTILISATEUR ===",
+        "Par catégorie de log :",
+    ]
+    for category, count in most_common(report.by_category):
+        lines.append(f"  - {category:<12} : {count:,}")
+    lines.append("Par niveau de sévérité :")
+    for level, count in most_common(report.by_level):
+        lines.append(f"  - {level:<12} : {count:,}")
+    lines.append(f"Utilisateurs distincts : {len(report.by_user):,}")
+    lines.append("Top 5 utilisateurs :")
+    for user, count in most_common(report.by_user, limit=5):
+        levels = most_common(report.by_user_level[user], limit=3)
+        detail = ", ".join(f"{name}={value:,}" for name, value in levels)
+        label = user if len(user) <= 28 else f"{user[:25]}..."
+        lines.append(f"  - {label:<28} : {count:,} ({detail})")
+    return "\n".join(lines) + "\n"
+
+
+def format_memory_report(
+    *,
+    total_lines: int,
+    valid_records: int,
+    invalid_lines: int,
+    elapsed_time: float,
+    peak_ram_mb: float | None,
+    avg_ram_mb: float | None,
+    memory_enabled: bool,
+) -> str:
+    """Build the memory and runtime summary report."""
+    lines = [
+        "=== RAPPORT DE CONSOMMATION MÉMOIRE ET PERFORMANCES ===",
+        f"Total de lignes lues   : {total_lines:,} lignes",
+        f"Records valides        : {valid_records:,}",
+        f"Lignes invalides       : {invalid_lines:,}",
+        f"Temps d'exécution      : {elapsed_time:.2f} secondes",
+    ]
+    if memory_enabled:
+        if peak_ram_mb is not None:
+            lines.append(f"📈 Pic de RAM (Peak)    : {peak_ram_mb:.2f} Mo")
+        if avg_ram_mb is not None:
+            lines.append(f"📊 Moyenne de RAM       : {avg_ram_mb:.2f} Mo")
+    else:
+        lines.append("Suivi RAM              : désactivé (utilisez --memory)")
+    return "\n".join(lines) + "\n"
+
+
+def write_count_report(report: CountReport, output_path: Path) -> None:
+    """Persist the counting report to disk."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(format_count_report(report), encoding="utf-8")
+
+
+def write_memory_report(
+    *,
+    total_lines: int,
+    valid_records: int,
+    invalid_lines: int,
+    elapsed_time: float,
+    peak_ram_mb: float | None,
+    avg_ram_mb: float | None,
+    memory_enabled: bool,
+    output_path: Path,
+) -> None:
+    """Persist the memory report to disk."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        format_memory_report(
+            total_lines=total_lines,
+            valid_records=valid_records,
+            invalid_lines=invalid_lines,
+            elapsed_time=elapsed_time,
+            peak_ram_mb=peak_ram_mb,
+            avg_ram_mb=avg_ram_mb,
+            memory_enabled=memory_enabled,
+        ),
+        encoding="utf-8",
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Analyse et normalise les logs HTTP.")
     parser.add_argument(
@@ -139,6 +222,18 @@ def main() -> None:
         "--security-report",
         type=Path,
         help="Rapport texte des règles de sécurité et de l'audit.",
+    )
+    parser.add_argument(
+        "--count-report-output",
+        type=Path,
+        default=Path(__file__).resolve().parent / "reports" / "comptage_report.txt",
+        help="Chemin du rapport de comptage par catégorie et utilisateur.",
+    )
+    parser.add_argument(
+        "--memory-report-output",
+        type=Path,
+        default=Path(__file__).resolve().parent / "reports" / "memory_report.txt",
+        help="Chemin du rapport de consommation mémoire et performances.",
     )
     arguments = parser.parse_args()
 
@@ -255,6 +350,29 @@ def main() -> None:
         avg_ram_mb = (sum(memory_samples) / len(memory_samples)) / (1024 * 1024)
     else:
         avg_ram_mb = None
+
+    try:
+        write_count_report(report, arguments.count_report_output)
+        print(f"\nRapport de comptage enregistré dans : {arguments.count_report_output}")
+    except OSError as error:
+        print(f"Erreur d'écriture du rapport de comptage : {error}", file=sys.stderr)
+        raise SystemExit(1) from error
+
+    try:
+        write_memory_report(
+            total_lines=tracker.seen,
+            valid_records=valid_records,
+            invalid_lines=tracker.rejected,
+            elapsed_time=elapsed_time,
+            peak_ram_mb=peak_ram_mb if arguments.memory else None,
+            avg_ram_mb=avg_ram_mb if arguments.memory else None,
+            memory_enabled=arguments.memory,
+            output_path=arguments.memory_report_output,
+        )
+        print(f"Rapport mémoire enregistré dans : {arguments.memory_report_output}")
+    except OSError as error:
+        print(f"Erreur d'écriture du rapport mémoire : {error}", file=sys.stderr)
+        raise SystemExit(1) from error
 
     # 5. Display the execution report
     print("\n=== RAPPORT DE CONSOMMATION MÉMOIRE ET PERFORMANCES ===")
