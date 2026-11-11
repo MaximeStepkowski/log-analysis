@@ -9,6 +9,8 @@ import sys
 import time
 from pathlib import Path
 
+from log_engine.aggregation import CountReport, most_common
+
 try:
     import resource
 except ImportError:  # pragma: no cover - disponible sous Unix uniquement
@@ -147,6 +149,8 @@ def main() -> None:
         ip_collector,
     )
     brute_force_detector = BruteForceDetector()
+    # Alimente par le flux deja filtre : ne compte que les records valides.
+    report = CountReport()
 
     valid_records = 0
     sample_interval = 10_000
@@ -157,6 +161,7 @@ def main() -> None:
     for record in valid_stream:
 
         valid_records += 1
+        report.update(record)
         if "ip" in record and "status" in record:
             brute_force_detector.process(record)
 
@@ -204,6 +209,21 @@ def main() -> None:
         print(f" 📊 Moyenne de RAM       : {avg_ram_mb:.2f} Mo")
     else:
         print(" Suivi RAM              : désactivé (utilisez --memory)")
+
+    print("\n=== COMPTAGE PAR CATÉGORIE ET PAR UTILISATEUR ===")
+    print(" Par catégorie de log :")
+    for category, count in most_common(report.by_category):
+        print(f"   - {category:<12} : {count:,}")
+    print(" Par niveau de sévérité :")
+    for level, count in most_common(report.by_level):
+        print(f"   - {level:<12} : {count:,}")
+    print(f" Utilisateurs distincts : {len(report.by_user):,}")
+    print(" Top 5 utilisateurs :")
+    for user, count in most_common(report.by_user, limit=5):
+        levels = most_common(report.by_user_level[user], limit=3)
+        detail = ", ".join(f"{name}={value:,}" for name, value in levels)
+        label = user if len(user) <= 28 else f"{user[:25]}..."
+        print(f"   - {label:<28} : {count:,} ({detail})")
 
     if tracker.unknown:
         print(

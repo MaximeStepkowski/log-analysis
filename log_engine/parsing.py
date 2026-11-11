@@ -155,8 +155,8 @@ def build_http_record(
     return record
 
 
-def parse_line(line: str) -> Record | None:
-    """Parse une ligne de log et renvoie un dict, ou None si la ligne est invalide."""
+def parse_line(line: str) -> Record:
+    """Parse une ligne de log et renvoie toujours un dictionnaire."""
     if not line or not line.strip():
         return invalid_record(line, "Ligne vide")
 
