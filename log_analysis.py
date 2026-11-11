@@ -1,4 +1,4 @@
-"""Menu interactif pour générer, analyser et consulter les logs."""
+"""Interactive menu for generating, analyzing, and viewing logs."""
 
 import shutil
 import subprocess
