@@ -1,4 +1,4 @@
-"""Module 1 : parsing des lignes de logs vers des dictionnaires Python."""
+"""Module 1: parse log lines into Python dictionaries."""
 
 from log_transformation.normalization import normalize_record
 import json
@@ -51,13 +51,13 @@ HTTP_KV_PATTERN = re.compile(
 
 
 def invalid_record(line: str, error: str) -> Record:
-    """Construit un dictionnaire décrivant une ligne invalide."""
+    """Build a dictionary describing an invalid line."""
     return {"raw_line": line, "error": error}
 
 
 @lru_cache(maxsize=256)
 def parse_timestamp(value: str) -> datetime:
-    """Convertit les formats de date supportés et rejette les dates invalides."""
+    """Convert supported date formats and reject invalid dates."""
     normalized = value.strip()
     if normalized.endswith("Z"):
         normalized = f"{normalized[:-1]}+00:00"
@@ -78,7 +78,7 @@ def parse_timestamp(value: str) -> datetime:
 
 @lru_cache(maxsize=256)
 def validate_ip(value: str) -> str:
-    """Valide une adresse IPv4 ou IPv6 et renvoie sa représentation texte."""
+    """Validate an IPv4 or IPv6 address and return its textual form."""
     try:
         ip_address(value)
     except ValueError as error:
@@ -95,7 +95,7 @@ def build_record(
     user: str,
     payload: Any,
 ) -> Record:
-    """Construit le dictionnaire d'un log ou lève une erreur de validation."""
+    """Build a log dictionary or raise a validation error."""
     if level not in LEVELS:
         raise ValueError(f"Niveau de sévérité invalide: {level}")
 
@@ -104,7 +104,7 @@ def build_record(
         "level": level,
         "user": user,
         "payload": payload,
-        # metadonnees fixes immuables : (IP, Port, Protocole)
+        # Fixed immutable metadata: (IP, port, protocol)
         "connection": (validate_ip(ip), int(port), protocol),
     }
 
@@ -123,7 +123,7 @@ def build_http_record(
     user_agent: str = "",
     payload: Any = None,
 ) -> Record:
-    """Construit un enregistrement à partir d'un log HTTP."""
+    """Build a record from an HTTP log."""
     status = int(status)
     if status >= 500:
         level = "CRITICAL"
@@ -156,13 +156,13 @@ def build_http_record(
 
 
 def parse_line(line: str) -> Record:
-    """Parse une ligne de log et renvoie toujours un dictionnaire."""
+    """Parse a log line and always return a dictionary."""
     if not line or not line.strip():
         return invalid_record(line, "Ligne vide")
 
     line = line.strip()
 
-    # Format JSON : le payload est le dictionnaire JSON complet
+    # JSON format: the payload is the complete JSON dictionary
     if line.startswith("{"):
         try:
             data = json.loads(line)
@@ -201,7 +201,7 @@ def parse_line(line: str) -> Record:
         except (TypeError, ValueError) as error:
             return invalid_record(line, str(error))
 
-    # Formats de logs système : clé=valeur puis format brut
+    # System log formats: key=value format followed by the raw format
     match = KV_PATTERN.match(line) or RAW_PATTERN.match(line)
     if match is None:
         return invalid_record(line, "Format de ligne inconnu")
@@ -215,13 +215,13 @@ def parse_line(line: str) -> Record:
 
 
 def parse_logs(lines: Iterable[str]) -> Iterator[Record]:
-    """Parse et normalise chaque ligne sans supprimer les enregistrements invalides."""
+    """Parse and normalize each line without removing invalid records."""
     parsed_records = map(parse_line, lines)
     yield from map(normalize_record, parsed_records)
 
 
 def _parse_batch(lines: list[str]) -> list[Record | None]:
-    """Parse un lot dans un processus worker."""
+    """Parse a batch in a worker process."""
     return list(map(normalize_record, map(parse_line, lines)))
 
 
@@ -230,7 +230,7 @@ def parse_logs_parallel(
     workers: int,
     batch_size: int = 2_000,
 ) -> Iterator[Record]:
-    """Parse les lignes en parallèle avec un nombre borné de lots en mémoire."""
+    """Parse lines in parallel with a bounded number of batches in memory."""
     if workers < 2:
         yield from parse_logs(lines)
         return

@@ -1,4 +1,4 @@
-"""Détection d'attaques par force brute dans les logs HTTP."""
+"""Detect brute-force attacks in HTTP logs."""
 
 import logging
 from collections.abc import Iterable
@@ -15,7 +15,7 @@ FAILED_STATUSES = frozenset({401, 403})
 
 
 class BruteForceDetector:
-    """Détecte les échecs consécutifs en consommant des records déjà parsés."""
+    """Detect consecutive failures from already parsed records."""
 
     def __init__(self, threshold: int = BRUTE_FORCE_THRESHOLD) -> None:
         if threshold < 1:
@@ -26,23 +26,23 @@ class BruteForceDetector:
         self.alerts: list[dict[str, Any]] = []
 
     def process(self, record: dict[str, Any]) -> None:
-        """Analyse un record HTTP sans relire ni reparser sa source."""
+        """Analyze an HTTP record without rereading or reparsing its source."""
         ip = record["ip"]
         status = int(record["status"])
 
         if status in FAILED_STATUSES:
-            # Chaque IP possède son propre compteur d'échecs consécutifs.
+            # Each IP has its own consecutive-failure counter.
             self.failures[ip] = self.failures.get(ip, 0) + 1
             if self.failures[ip] >= self.threshold:
                 self._add_alert(record, ip)
         elif status < 400:
-            # Une réponse réussie termine la série d'échecs de cette IP.
+            # A successful response ends this IP's failure streak.
             self.failures[ip] = 0
             self.alerted_ips.discard(ip)
 
     def process_cycles(self, records: Iterable[dict[str, Any]]) -> None:
-        """Analyse les cycles de chaque IP sans arrêter l'analyse globale."""
-        # Un succès sépare deux cycles d'échecs pour une même IP.
+        """Analyze each IP cycle without stopping the global analysis."""
+        # A success separates two failure cycles for the same IP.
         cycles_by_ip: dict[str, list[list[dict[str, Any]]]] = {}
         current_cycles: dict[str, list[dict[str, Any]]] = {}
 
@@ -52,7 +52,7 @@ class BruteForceDetector:
             cycle = current_cycles.setdefault(ip, [])
 
             if status < 400:
-                # On clôt le cycle avant d'ignorer le record de réussite.
+                # Close the cycle before ignoring the successful record.
                 if cycle:
                     cycles_by_ip.setdefault(ip, []).append(cycle)
                     current_cycles[ip] = []
@@ -62,7 +62,7 @@ class BruteForceDetector:
 
             cycle.append(record)
 
-        # Les cycles qui se terminent en fin de fichier doivent être conservés.
+        # Preserve cycles that end at the end of the file.
         for ip, cycle in current_cycles.items():
             if cycle:
                 cycles_by_ip.setdefault(ip, []).append(cycle)
@@ -77,16 +77,16 @@ class BruteForceDetector:
                 for record in cycle:
                     status = int(record["status"])
                     if status not in FAILED_STATUSES:
-                        # Les statuts hors 401/403 ne comptent pas comme échecs.
+                        # Statuses other than 401/403 do not count as failures.
                         continue
 
                     self.failures[ip] += 1
                     if self.failures[ip] >= self.threshold:
                         self._add_alert(record, ip)
-                        # Cette alerte termine uniquement le cycle courant.
+                        # This alert ends only the current cycle.
                         break
                 else:
-                    # Ce bloc s'exécute si le cycle finit sans atteindre le seuil.
+                    # This block runs when the cycle ends without reaching the threshold.
                     LOGGER.info("Cycle de détection terminé sans alerte pour %s", ip)
 
                 cycle_index += 1
@@ -94,11 +94,11 @@ class BruteForceDetector:
         self.alerts.sort(key=lambda alert: alert.get("timestamp"))
 
     def _add_alert(self, record: dict[str, Any], ip: str) -> None:
-        """Ajoute une alerte si cette IP n'a pas déjà été signalée."""
+        """Add an alert if this IP has not already been reported."""
         if ip in self.alerted_ips:
             return
 
-        # Le record qui atteint le seuil fournit les détails de l'alerte.
+        # The record reaching the threshold provides the alert details.
         alert = {
             "ip": ip,
             "attempts": self.failures[ip],
@@ -115,17 +115,17 @@ class BruteForceDetector:
 
 
 def _parse_records(lines_or_records: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:
-    """Parse les lignes et conserve les enregistrements HTTP valides."""
+    """Parse lines and keep valid HTTP records."""
     records = []
     for item in lines_or_records:
-        # Les chaînes sont parsées ; les dictionnaires sont déjà exploitables.
+        # Strings are parsed; dictionaries are already usable records.
         record = parse_line(item) if isinstance(item, str) else item
         if not record or "ip" not in record or "status" not in record:
-            # Une ligne invalide ne doit pas interrompre toute l'analyse.
+            # An invalid line must not interrupt the entire analysis.
             LOGGER.warning("Log ignoré pendant la détection de force brute: %s", item)
             continue
         records.append(record)
-    # La détection doit respecter l'ordre temporel des événements.
+    # Detection must preserve the chronological order of events.
     return sorted(records, key=lambda record: record.get("timestamp"))
 
 
@@ -133,30 +133,30 @@ def detect_brute_force(
     lines_or_records: Iterable[str | dict[str, Any]],
     threshold: int = BRUTE_FORCE_THRESHOLD,
 ) -> list[dict[str, Any]]:
-    """Retourne les alertes pour trois échecs consécutifs d'une même IP.
+    """Return alerts for three consecutive failures from the same IP.
 
-    Les statuts HTTP 401 et 403 sont considérés comme des échecs. Tout statut
-    inférieur à 400 réinitialise la série d'échecs de l'IP concernée.
+    HTTP statuses 401 and 403 count as failures. Any status below 400 resets
+    the failure streak for the corresponding IP.
     """
     records = _parse_records(lines_or_records)
     detector = BruteForceDetector(threshold)
-    # Le détecteur traite ensuite tous les cycles sans s'arrêter à la première alerte.
+    # The detector then processes every cycle instead of stopping at the first alert.
     detector.process_cycles(records)
 
     return detector.alerts
 
 
 def write_report(alerts: Iterable[dict[str, Any]], output: str | Path) -> None:
-    """Écrit un rapport d'alertes dans le fichier indiqué."""
+    """Write an alert report to the specified file."""
     alert_list = list(alerts)
     output_path = Path(output)
-    # Le dossier de sortie peut ne pas exister lors du premier lancement.
+    # The output directory may not exist on the first run.
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(_format_report(alert_list), encoding="utf-8")
 
 
 def _format_report(alerts: Iterable[dict[str, Any]]) -> str:
-    """Construit le texte partagé par l'affichage CLI et le fichier rapport."""
+    """Build the text shared by the CLI and the report file."""
     alert_list = list(alerts)
     report_lines = [f"Nombre d'alertes de force brute : {len(alert_list)}"]
     report_lines.extend(
@@ -172,7 +172,7 @@ def detect_brute_force_from_directory(
     pattern: str = "*.log",
     threshold: int = BRUTE_FORCE_THRESHOLD,
 ) -> list[dict[str, Any]]:
-    """Analyse les fichiers de logs d'un dossier et retourne les alertes."""
+    """Analyze a directory's log files and return the alerts."""
     return detect_brute_force(
         read_logs_from_directory(Path(directory), pattern), threshold=threshold
     )

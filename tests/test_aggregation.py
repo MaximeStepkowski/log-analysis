@@ -1,4 +1,4 @@
-"""Tests du comptage par defaultdict (Module 3.2)."""
+"""Tests for defaultdict counting (Module 3.2)."""
 
 from log_engine.aggregation import (
     UNKNOWN_KEY,

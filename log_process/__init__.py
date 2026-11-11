@@ -1,4 +1,4 @@
-"""Traitement et détection de comportements suspects dans les logs."""
+"""Process logs and detect suspicious behavior."""
 
 from log_process.brute_force import (
 	BruteForceDetector,

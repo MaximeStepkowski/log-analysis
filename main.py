@@ -1,6 +1,6 @@
 """
-Point d'entrée principal (main.py)
-Mesure du pic de RAM et calcul de la moyenne de consommation mémoire.
+Main entry point (main.py).
+Measure peak RAM and calculate average memory usage.
 """
 
 import argparse
@@ -29,6 +29,14 @@ from log_processing.ip_sets import (
 
 from log_process.brute_force import BruteForceDetector, write_report
 from log_transformation.tracker import Tracker
+from security import (
+    SecurityContext,
+    apply_security_rules,
+    rule_blacklisted_ip,
+    rule_brute_force,
+    rule_http_errors,
+)
+from security.report import write_security_report
 
 
 if sys.platform == "win32":
@@ -63,7 +71,7 @@ def get_windows_memory() -> tuple[int, int]:
 
 
 def get_current_memory_bytes() -> int:
-    """Retourne la mémoire résidente courante du processus."""
+    """Return the process's current resident memory."""
     if sys.platform == "win32":
         return get_windows_memory()[0]
 
@@ -76,7 +84,7 @@ def get_current_memory_bytes() -> int:
 
 
 def get_peak_memory_bytes() -> int:
-    """Retourne le pic RSS en octets selon le système d'exploitation."""
+    """Return the peak RSS in bytes for the current operating system."""
     if sys.platform == "win32":
         return get_windows_memory()[1]
 
@@ -103,6 +111,17 @@ def main() -> None:
         help="Nombre de processus de parsing (1 désactive le parallélisme).",
     )
     parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=5_000,
+        help="Nombre de lignes par lot envoyé à un worker.",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Désactive les messages de progression intermédiaires.",
+    )
+    parser.add_argument(
         "--ip-report-output",
         type=Path,
         default=Path(__file__).resolve().parent / "reports" / "ip_report.txt",
@@ -112,14 +131,21 @@ def main() -> None:
         "--brute-force-output",
         type=Path,
         default=Path(__file__).resolve().parent
-        / "brute_force"
+        / "reports"
         / "brute_force_report.txt",
         help="Rapport force brute produit pendant l'analyse.",
+    )
+    parser.add_argument(
+        "--security-report",
+        type=Path,
+        help="Rapport texte des règles de sécurité et de l'audit.",
     )
     arguments = parser.parse_args()
 
     if arguments.workers < 1:
         parser.error("--workers doit être supérieur ou égal à 1")
+    if arguments.batch_size < 1:
+        parser.error("--batch-size doit être supérieur ou égal à 1")
 
     try:
         blacklist = load_blacklist()
@@ -129,7 +155,7 @@ def main() -> None:
 
     logs_directory = Path(__file__).resolve().parent / "logs"
 
-    # 1. Démarrer le suivi mémoire et le chronomètre
+    # 1. Start memory tracking and the timer
     start_time = time.time()
 
     print(
@@ -137,9 +163,13 @@ def main() -> None:
         f"LECTURE DE TOUT LE DOSSIER '{logs_directory}' ==="
     )
 
-    # 2. Chaînage des générateurs (Streaming continu via yield from)
+    # 2. Chain generators (continuous streaming via yield from)
     raw_stream = read_logs_from_directory(logs_directory)
-    parsed_stream = parse_logs_parallel(raw_stream, arguments.workers)
+    parsed_stream = parse_logs_parallel(
+        raw_stream,
+        arguments.workers,
+        batch_size=arguments.batch_size,
+    )
     preview_limit = 3
     tracker = Tracker(sample_size=preview_limit)
     ip_collector = IPCollector()
@@ -149,7 +179,19 @@ def main() -> None:
         ip_collector,
     )
     brute_force_detector = BruteForceDetector()
-    # Alimente par le flux deja filtre : ne compte que les records valides.
+    security_enabled = arguments.security_report is not None
+    if security_enabled:
+        security_context = SecurityContext(
+            blacklist=blacklist,
+            brute_force_detector=brute_force_detector,
+        )
+        security_findings = []
+        security_rules = (
+            rule_blacklisted_ip,
+            rule_http_errors,
+            rule_brute_force,
+        )
+    # Feed from the already filtered stream: only valid records are counted.
     report = CountReport()
 
     valid_records = 0
@@ -157,15 +199,22 @@ def main() -> None:
     memory_samples = []
     progress_interval = 100_000
 
-    # 3. Filtrage de chaque enregistrement individuellement
+    # 3. Filter each record individually
     for record in valid_stream:
 
         valid_records += 1
-        report.update(record)
-        if "ip" in record and "status" in record:
+        report.update(record, category=tracker.last_category)
+        if "ip" in record and "status" in record and not security_enabled:
             brute_force_detector.process(record)
+        if security_enabled:
+            apply_security_rules(
+                *security_rules,
+                record=record,
+                context=security_context,
+                _sink=security_findings,
+            )
 
-        if tracker.seen % progress_interval == 0:
+        if not arguments.quiet and tracker.seen % progress_interval == 0:
             elapsed = time.time() - start_time
             rate = tracker.seen / elapsed if elapsed else 0
             print(
@@ -175,8 +224,7 @@ def main() -> None:
                 f"débit : {rate:,.0f} lignes/s"
             )
 
-        # Échantillonnage régulier pour calculer la moyenne sans impacter les
-        # performances
+        # Sample regularly to calculate the average without affecting performance.
         if arguments.memory and tracker.seen % sample_interval == 0:
             memory_samples.append(get_current_memory_bytes())
 
@@ -189,8 +237,18 @@ def main() -> None:
         peak_mem = 0
     elapsed_time = time.time() - start_time
     write_report(brute_force_detector.alerts, arguments.brute_force_output)
+    if security_enabled:
+        write_security_report(
+            security_findings,
+            arguments.security_report,
+            audit_context={
+                "record_count": tracker.seen,
+                "valid_record_count": valid_records,
+                "security_findings": security_findings,
+            },
+        )
 
-    # 4. Calculs de la RAM (en Mégaoctets - Mo)
+    # 4. Calculate RAM usage in megabytes
     peak_ram_mb = peak_mem / (1024 * 1024)
 
     if arguments.memory and memory_samples:
@@ -198,7 +256,7 @@ def main() -> None:
     else:
         avg_ram_mb = None
 
-    # 5. Affichage du rapport d'exécution
+    # 5. Display the execution report
     print("\n=== RAPPORT DE CONSOMMATION MÉMOIRE ET PERFORMANCES ===")
     print(f" Total de lignes lues   : {tracker.seen:,} lignes")
     print(f" Records valides        : {valid_records:,}")
@@ -255,6 +313,8 @@ def main() -> None:
         f" Alertes détectées : {len(brute_force_detector.alerts)}\n"
         f" Rapport écrit dans : {arguments.brute_force_output}"
     )
+    if arguments.security_report:
+        print(f"\nRapport de sécurité écrit dans : {arguments.security_report}")
 
     ip_report = compare_with_blacklist(
         blacklist,

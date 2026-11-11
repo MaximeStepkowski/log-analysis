@@ -7,12 +7,13 @@ from log_transformation.filter import valid_log
 
 @dataclass
 class Tracker:
-    """Predicate for filter(): routes every record, keeps valid ones,
-    counts and samples the rest."""
+    """Predicate for filter(): route every record, keep valid ones,
+    and count and sample the rest."""
     sample_size: int = 3
     seen: int = 0                                   # total lines
     rejected: int = 0                               # failed valid_log
     unknown: int = 0                                # kind == "unknown"
+    last_category: str = "unknown"
     route_examples: dict = field(default_factory=dict)   # first example per kind
     valid_samples: list = field(default_factory=list)
     invalid_samples: list = field(default_factory=list)
@@ -21,6 +22,7 @@ class Tracker:
     def __call__(self, record: Any) -> bool:
         self.seen += 1
         kind, description = route_log(record)
+        self.last_category = kind
 
         if kind not in self.route_examples:
             self.route_examples[kind] = (description, record)

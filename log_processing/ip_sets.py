@@ -1,9 +1,9 @@
-"""Module 3.1 : unicité des adresses IP et opérations d'ensembles.
+"""Module 3.1: unique IP addresses and set operations.
 
-Les IP sont collectées en un seul passage sur le flux de records, sans jamais
-stocker les lignes : la mémoire dépend du nombre d'IP *distinctes*, pas du
-nombre de lignes lues. La liste noire est un ``frozenset`` (immuable), les IP
-observées sont des ``set`` (mutables, alimentés au fil de l'eau).
+IPs are collected in a single pass over the record stream without storing
+lines: memory depends on the number of *distinct* IPs, not the number of lines
+read. The blacklist is an immutable ``frozenset`` and observed IPs are mutable
+``set`` instances populated as the stream is consumed.
 """
 
 from collections.abc import Iterable, Iterator
@@ -20,7 +20,7 @@ DEFAULT_BLACKLIST_PATH = (
 
 
 def load_blacklist(path: Path = DEFAULT_BLACKLIST_PATH) -> frozenset[str]:
-    """Charge la liste noire (une IP par ligne) dans un frozenset immuable."""
+    """Load the blacklist, one IP per line, into an immutable frozenset."""
     ips: set[str] = set()
     with open(path, encoding="utf-8") as file:
         for number, line in enumerate(file, start=1):
@@ -39,7 +39,7 @@ def load_blacklist(path: Path = DEFAULT_BLACKLIST_PATH) -> frozenset[str]:
 
 @dataclass
 class IPCollector:
-    """Accumule les IP actives et les IP ayant généré des erreurs."""
+    """Accumulate active IPs and IPs that generated errors."""
 
     active_ips: set[str] = field(default_factory=set)
     error_ips: set[str] = field(default_factory=set)
@@ -47,7 +47,7 @@ class IPCollector:
     error_records: int = 0
 
     def observe(self, record: Record) -> None:
-        """Enregistre l'IP source d'un record (les records sans IP sont ignorés)."""
+        """Record the source IP; records without an IP are ignored."""
         match record:
             case {"connection": (str() as ip, _, _), "level": level}:
                 self.records_seen += 1
@@ -60,7 +60,7 @@ class IPCollector:
 
 
 def track_ips(records: Iterable[Record], collector: IPCollector) -> Iterator[Record]:
-    """Étape de pipeline transparente : alimente le collecteur, rend chaque record."""
+    """Transparent pipeline step that feeds the collector and yields each record."""
     for record in records:
         collector.observe(record)
         yield record
@@ -68,22 +68,22 @@ def track_ips(records: Iterable[Record], collector: IPCollector) -> Iterator[Rec
 
 @dataclass(frozen=True, slots=True)
 class BlacklistReport:
-    """Résultat des opérations d'ensembles entre la liste noire et les IP vues."""
+    """Result of set operations between the blacklist and observed IPs."""
 
     blacklist: frozenset[str]
     active_ips: frozenset[str]
     error_ips: frozenset[str]
-    # blacklist & active : IP blacklistées qui ont bien contacté le serveur
+    # blacklist & active: blacklisted IPs that contacted the server
     blacklisted_active: frozenset[str]
-    # blacklist - active : IP blacklistées restées silencieuses
+    # blacklist - active: blacklisted IPs that remained silent
     dormant_blacklisted: frozenset[str]
-    # active - blacklist : IP actives absentes de la liste noire
+    # active - blacklist: active IPs absent from the blacklist
     unlisted_active: frozenset[str]
-    # blacklist | active : toutes les IP connues, listées ou observées
+    # blacklist | active: all known, blacklisted, or observed IPs
     known_ips: frozenset[str]
-    # blacklist ^ active : IP à réconcilier, présentes dans un seul ensemble
+    # blacklist ^ active: IPs present in exactly one set
     only_in_one: frozenset[str]
-    # blacklist & error_ips : IP blacklistées qui ont aussi généré des erreurs
+    # blacklist & error_ips: blacklisted IPs that also generated errors
     blacklisted_errors: frozenset[str]
 
 
@@ -92,11 +92,11 @@ def compare_with_blacklist(
     active_ips: set[str],
     error_ips: set[str],
 ) -> BlacklistReport:
-    """Croise la liste noire avec les IP observées (|, &, -, ^).
+    """Compare the blacklist with observed IPs using |, &, -, and ^.
 
-    ``frozenset(...)`` est appliqué à chaque résultat : le type d'une opération
-    dépend de l'opérande de gauche (``set - frozenset`` renvoie un ``set``),
-    alors que le rapport doit rester entièrement immuable.
+    ``frozenset(...)`` is applied to every result: the operation type depends
+    on the left operand (``set - frozenset`` returns a ``set``), while the
+    report must remain fully immutable.
     """
     return BlacklistReport(
         blacklist=blacklist,
@@ -112,13 +112,13 @@ def compare_with_blacklist(
 
 
 def _sort_key(ip: str) -> tuple[int, int]:
-    """Tri numérique des IP (192.168.1.9 avant 192.168.1.10)."""
+    """Sort IPs numerically (192.168.1.9 before 192.168.1.10)."""
     address = ip_address(ip)
     return address.version, int(address)
 
 
 def _describe(ips: frozenset[str], limit: int) -> str:
-    """Liste triée et tronquée des IP, pour l'affichage."""
+    """Return a sorted and truncated list of IPs for display."""
     ordered = sorted(ips, key=_sort_key)
     shown = ", ".join(ordered[:limit])
     if len(ordered) > limit:
@@ -131,7 +131,7 @@ def format_ip_report(
     report: BlacklistReport,
     limit: int = 3,
 ) -> str:
-    """Met en forme l'analyse des IP, avec trois adresses par ensemble par défaut."""
+    """Format the IP analysis with three addresses per set by default."""
     rows = (
         ("IP actives (uniques)", report.active_ips, "set"),
         ("IP ayant généré des erreurs", report.error_ips, "set"),

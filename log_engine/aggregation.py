@@ -1,4 +1,4 @@
-"""Comptage des occurrences par catégorie, niveau et utilisateur (defaultdict)."""
+"""Count occurrences by category, level, and user (defaultdict)."""
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable
@@ -15,18 +15,18 @@ UNKNOWN_KEY = "<inconnu>"
 
 
 def new_counter() -> Counter:
-    """Cree un compteur dont toute cle absente vaut 0."""
+    """Create a counter whose missing keys default to zero."""
     return defaultdict(int)
 
 
 def new_nested_counter() -> NestedCounter:
-    """Cree un compteur a deux niveaux (ex: utilisateur -> niveau)."""
+    """Create a two-level counter, for example user -> level."""
     return defaultdict(new_counter)
 
 
 @dataclass
 class CountReport:
-    """Compteurs accumules sur un flux d'enregistrements."""
+    """Counters accumulated from a record stream."""
 
     by_category: Counter = field(default_factory=new_counter)
     by_level: Counter = field(default_factory=new_counter)
@@ -37,17 +37,17 @@ class CountReport:
 
     @property
     def valid(self) -> int:
-        """Nombre d'enregistrements exploitables."""
+        """Return the number of usable records."""
         return self.total - self.invalid
 
-    def update(self, record: Record | None) -> str:
-        """Comptabilise un enregistrement et renvoie sa categorie."""
+    def update(self, record: Record | None, category: str | None = None) -> str:
+        """Count a record and return its category."""
         self.total += 1
-        category = category_of(record)
+        category = category if category is not None else category_of(record)
         self.by_category[category] += 1
 
-        # Une ligne rejetee n'a ni niveau ni utilisateur : la compter
-        # fausserait les deux repartitions.
+        # A rejected line has no level or user; counting it would skew both
+        # distributions.
         if record is None or category == "invalid":
             self.invalid += 1
             return category
@@ -60,7 +60,7 @@ class CountReport:
         return category
 
     def as_dict(self) -> dict[str, Any]:
-        """Convertit le rapport en dictionnaires standards (affichage, JSON)."""
+        """Convert the report to standard dictionaries for display or JSON."""
         return {
             "total": self.total,
             "valid": self.valid,
@@ -75,7 +75,7 @@ class CountReport:
 
 
 def category_of(record: Record | None) -> str:
-    """Categorie d'un enregistrement, deduite du routage match-case."""
+    """Return a record category derived from match-case routing."""
     if record is None:
         return "invalid"
     category, _ = route_log(record)
@@ -83,12 +83,12 @@ def category_of(record: Record | None) -> str:
 
 
 def level_of(record: Record) -> str:
-    """Niveau de severite, ou valeur de repli si le champ est absent ou vide."""
+    """Return the severity level, or a fallback when the field is empty or missing."""
     return str(record.get("level") or UNKNOWN_KEY)
 
 
 def user_of(record: Record) -> str:
-    """Identifiant utilisateur, ou valeur de repli si le champ est absent ou vide."""
+    """Return the user identifier, or a fallback when the field is empty or missing."""
     return str(record.get("user") or UNKNOWN_KEY)
 
 
@@ -96,7 +96,7 @@ def count_occurrences(
     records: Iterable[Record],
     key: Callable[[Record], str],
 ) -> Counter:
-    """Compte les occurrences d'un flux selon une fonction de cle."""
+    """Count stream occurrences using a key function."""
     counts = new_counter()
     for record in records:
         if record is None:
@@ -106,22 +106,22 @@ def count_occurrences(
 
 
 def count_by_level(records: Iterable[Record]) -> Counter:
-    """Compte les enregistrements par niveau de severite."""
+    """Count records by severity level."""
     return count_occurrences(records, level_of)
 
 
 def count_by_user(records: Iterable[Record]) -> Counter:
-    """Compte les enregistrements par utilisateur."""
+    """Count records by user."""
     return count_occurrences(records, user_of)
 
 
 def count_by_category(records: Iterable[Record]) -> Counter:
-    """Compte les enregistrements par categorie de log."""
+    """Count records by log category."""
     return count_occurrences(records, category_of)
 
 
 def aggregate_counts(records: Iterable[Record | None]) -> CountReport:
-    """Agrege tous les compteurs en une seule passe sur le flux."""
+    """Aggregate all counters in a single pass over the stream."""
     report = CountReport()
     for record in records:
         report.update(record)
@@ -129,6 +129,6 @@ def aggregate_counts(records: Iterable[Record | None]) -> CountReport:
 
 
 def most_common(counts: Counter, limit: int | None = None) -> list[tuple[str, int]]:
-    """Trie un compteur par occurrences decroissantes, puis par cle."""
+    """Sort a counter by descending occurrence count, then by key."""
     ranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
     return ranked if limit is None else ranked[:limit]
