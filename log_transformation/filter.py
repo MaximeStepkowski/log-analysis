@@ -1,0 +1,57 @@
+from datetime import datetime
+from typing import Any
+
+# ============================================================
+# FILTERING CONSTANTS AND CRITERIA
+# ============================================================
+
+VALID_LEVELS = {"INFO", "WARNING", "ERROR", "CRITICAL"}
+
+# ============================================================
+# LOG STRUCTURE VALIDATION
+# ============================================================
+
+
+def valid_log(log: Any) -> bool:
+    """
+    Check that the log has a usable structure.
+    """
+
+    if not isinstance(log, dict):
+        return False
+
+    timestamp = log.get("timestamp")
+    if not isinstance(timestamp, (str, datetime)):
+        return False
+
+    if isinstance(timestamp, str) and not timestamp.strip():
+        return False
+
+    if log.get("level") not in VALID_LEVELS:
+        return False
+
+    if not isinstance(log.get("user"), str):
+        return False
+
+    if not isinstance(log.get("payload"), (dict, str)):
+        return False
+
+    connection = log.get("connection")
+    if not isinstance(connection, tuple) or len(connection) != 3:
+        return False
+
+    ip, port, protocol = connection
+
+    if not isinstance(ip, str) or not ip.strip():
+        return False
+
+    if not isinstance(port, int) or isinstance(port, bool):
+        return False
+
+    if not 1 <= port <= 65535:
+        return False
+
+    if not isinstance(protocol, str) or not protocol.strip():
+        return False
+
+    return True
