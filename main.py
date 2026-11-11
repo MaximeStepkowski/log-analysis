@@ -155,6 +155,7 @@ def main() -> None:
     parser.add_argument(
         "--security-report",
         type=Path,
+        default=Path(__file__).resolve().parent / "reports" / "security_report.txt",
         help="Rapport texte des règles de sécurité et de l'audit.",
     )
     parser.add_argument(
