@@ -1,0 +1,488 @@
+=== ANCIEN/NOUVEAU PIPELINE : LECTURE DE TOUT LE DOSSIER '/home/enrike/Desktop/Cours/ECE/Python/log-analysis/logs' ===
+Force brute détectée depuis 192.168.1.200: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.5: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.8: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.27: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.18: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.54: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.21: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.2: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.34: 3 échecs consécutifs
+Progression : 100,000 lignes | valides : 99,201 | invalides : 799 | débit : 52,321 lignes/s
+Force brute détectée depuis 192.168.1.73: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.16: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.33: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.43: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.10: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.2: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.80: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.65: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.95: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.13: 3 échecs consécutifs
+Progression : 200,000 lignes | valides : 198,378 | invalides : 1,622 | débit : 56,347 lignes/s
+Force brute détectée depuis 172.16.0.4: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.66: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.41: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.98: 3 échecs consécutifs
+Progression : 300,000 lignes | valides : 297,588 | invalides : 2,412 | débit : 59,101 lignes/s
+Force brute détectée depuis 172.16.0.28: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.76: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.96: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.16: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.44: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.26: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.41: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.74: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.75: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.66: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.39: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.9: 3 échecs consécutifs
+Progression : 400,000 lignes | valides : 396,757 | invalides : 3,243 | débit : 59,337 lignes/s
+Force brute détectée depuis 192.168.1.79: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.96: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.18: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.55: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.73: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.47: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.24: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.49: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.18: 3 échecs consécutifs
+Progression : 500,000 lignes | valides : 495,945 | invalides : 4,055 | débit : 59,510 lignes/s
+Force brute détectée depuis 10.0.0.30: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.66: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.75: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.8: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.49: 3 échecs consécutifs
+Progression : 600,000 lignes | valides : 595,101 | invalides : 4,899 | débit : 59,968 lignes/s
+Force brute détectée depuis 172.16.0.19: 3 échecs consécutifs
+Progression : 700,000 lignes | valides : 694,292 | invalides : 5,708 | débit : 59,945 lignes/s
+Force brute détectée depuis 192.168.1.45: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.10: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.81: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.6: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.13: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.32: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.87: 3 échecs consécutifs
+Progression : 800,000 lignes | valides : 793,433 | invalides : 6,567 | débit : 59,958 lignes/s
+Force brute détectée depuis 192.168.1.80: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.94: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.9: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.82: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.4: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.3: 3 échecs consécutifs
+Progression : 900,000 lignes | valides : 892,619 | invalides : 7,381 | débit : 59,844 lignes/s
+Force brute détectée depuis 192.168.1.1: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.7: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.25: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.43: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.37: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.4: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.64: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.8: 3 échecs consécutifs
+Progression : 1,000,000 lignes | valides : 991,843 | invalides : 8,157 | débit : 59,956 lignes/s
+Force brute détectée depuis 172.16.0.4: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.21: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.63: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.28: 3 échecs consécutifs
+Progression : 1,100,000 lignes | valides : 1,091,094 | invalides : 8,906 | débit : 60,007 lignes/s
+Force brute détectée depuis 192.168.1.56: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.40: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.15: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.8: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.63: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.53: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.7: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.43: 3 échecs consécutifs
+Progression : 1,200,000 lignes | valides : 1,190,348 | invalides : 9,652 | débit : 60,297 lignes/s
+Force brute détectée depuis 192.168.1.30: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.85: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.37: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.7: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.82: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.78: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.47: 3 échecs consécutifs
+Progression : 1,300,000 lignes | valides : 1,289,572 | invalides : 10,428 | débit : 60,122 lignes/s
+Force brute détectée depuis 192.168.1.55: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.5: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.41: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.36: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.38: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.12: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.7: 3 échecs consécutifs
+Progression : 1,400,000 lignes | valides : 1,388,761 | invalides : 11,239 | débit : 60,075 lignes/s
+Force brute détectée depuis 192.168.1.67: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.21: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.9: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.21: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.11: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.1: 3 échecs consécutifs
+Progression : 1,500,000 lignes | valides : 1,487,923 | invalides : 12,077 | débit : 60,003 lignes/s
+Force brute détectée depuis 192.168.1.68: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.24: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.37: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.3: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.73: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.7: 3 échecs consécutifs
+Progression : 1,600,000 lignes | valides : 1,587,127 | invalides : 12,873 | débit : 59,842 lignes/s
+Force brute détectée depuis 10.0.0.47: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.1: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.5: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.31: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.7: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.16: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.17: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.8: 3 échecs consécutifs
+Progression : 1,700,000 lignes | valides : 1,686,356 | invalides : 13,644 | débit : 59,800 lignes/s
+Force brute détectée depuis 192.168.1.44: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.23: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.24: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.77: 3 échecs consécutifs
+Progression : 1,800,000 lignes | valides : 1,785,580 | invalides : 14,420 | débit : 59,563 lignes/s
+Force brute détectée depuis 192.168.1.96: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.66: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.11: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.61: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.75: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.25: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.68: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.69: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.93: 3 échecs consécutifs
+Progression : 1,900,000 lignes | valides : 1,884,792 | invalides : 15,208 | débit : 59,422 lignes/s
+Force brute détectée depuis 192.168.1.14: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.40: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.25: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.48: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.46: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.31: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.33: 3 échecs consécutifs
+Progression : 2,000,000 lignes | valides : 1,983,992 | invalides : 16,008 | débit : 59,482 lignes/s
+Force brute détectée depuis 192.168.1.4: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.68: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.7: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.49: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.35: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.24: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.6: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.16: 3 échecs consécutifs
+Progression : 2,100,000 lignes | valides : 2,083,183 | invalides : 16,817 | débit : 59,393 lignes/s
+Force brute détectée depuis 10.0.0.45: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.96: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.12: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.92: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.4: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.22: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.13: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.38: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.28: 3 échecs consécutifs
+Progression : 2,200,000 lignes | valides : 2,182,358 | invalides : 17,642 | débit : 59,323 lignes/s
+Force brute détectée depuis 192.168.1.47: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.1: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.28: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.42: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.52: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.3: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.76: 3 échecs consécutifs
+Progression : 2,300,000 lignes | valides : 2,281,562 | invalides : 18,438 | débit : 59,357 lignes/s
+Force brute détectée depuis 172.16.0.3: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.27: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.81: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.55: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.49: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.70: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.14: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.35: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.81: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.46: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.43: 3 échecs consécutifs
+Progression : 2,400,000 lignes | valides : 2,380,686 | invalides : 19,314 | débit : 59,289 lignes/s
+Force brute détectée depuis 192.168.1.48: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.56: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.7: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.10: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.9: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.6: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.25: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.10: 3 échecs consécutifs
+Progression : 2,500,000 lignes | valides : 2,479,917 | invalides : 20,083 | débit : 59,365 lignes/s
+Force brute détectée depuis 172.16.0.24: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.99: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.85: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.7: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.22: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.88: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.29: 3 échecs consécutifs
+Progression : 2,600,000 lignes | valides : 2,579,012 | invalides : 20,988 | débit : 59,423 lignes/s
+Force brute détectée depuis 192.168.1.13: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.16: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.6: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.86: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.26: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.45: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.98: 3 échecs consécutifs
+Progression : 2,700,000 lignes | valides : 2,678,223 | invalides : 21,777 | débit : 59,511 lignes/s
+Force brute détectée depuis 192.168.1.97: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.19: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.62: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.77: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.78: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.4: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.26: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.22: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.93: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.99: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.48: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.35: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.90: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.4: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.69: 3 échecs consécutifs
+Progression : 2,800,000 lignes | valides : 2,777,408 | invalides : 22,592 | débit : 59,486 lignes/s
+Force brute détectée depuis 172.16.0.7: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.70: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.73: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.11: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.94: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.24: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.18: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.89: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.41: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.1: 3 échecs consécutifs
+Progression : 2,900,000 lignes | valides : 2,876,642 | invalides : 23,358 | débit : 59,480 lignes/s
+Force brute détectée depuis 192.168.1.9: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.17: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.16: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.18: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.92: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.2: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.13: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.45: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.7: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.42: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.37: 3 échecs consécutifs
+Progression : 3,100,000 lignes | valides : 3,075,023 | invalides : 24,977 | débit : 59,475 lignes/s
+Force brute détectée depuis 10.0.0.42: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.93: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.16: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.53: 3 échecs consécutifs
+Progression : 3,200,000 lignes | valides : 3,174,222 | invalides : 25,778 | débit : 59,528 lignes/s
+Force brute détectée depuis 192.168.1.19: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.24: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.54: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.44: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.22: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.38: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.38: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.2: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.69: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.6: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.89: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.35: 3 échecs consécutifs
+Progression : 3,300,000 lignes | valides : 3,273,402 | invalides : 26,598 | débit : 59,392 lignes/s
+Force brute détectée depuis 192.168.1.47: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.37: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.24: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.85: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.16: 3 échecs consécutifs
+Progression : 3,400,000 lignes | valides : 3,372,618 | invalides : 27,382 | débit : 59,333 lignes/s
+Force brute détectée depuis 192.168.1.14: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.34: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.23: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.24: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.41: 3 échecs consécutifs
+Progression : 3,500,000 lignes | valides : 3,471,821 | invalides : 28,179 | débit : 59,351 lignes/s
+Force brute détectée depuis 10.0.0.38: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.38: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.46: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.34: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.6: 3 échecs consécutifs
+Progression : 3,600,000 lignes | valides : 3,571,027 | invalides : 28,973 | débit : 59,356 lignes/s
+Force brute détectée depuis 172.16.0.22: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.4: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.1: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.66: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.50: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.75: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.80: 3 échecs consécutifs
+Progression : 3,700,000 lignes | valides : 3,670,183 | invalides : 29,817 | débit : 59,352 lignes/s
+Force brute détectée depuis 192.168.1.77: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.3: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.7: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.47: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.5: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.32: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.50: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.2: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.28: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.80: 3 échecs consécutifs
+Progression : 3,800,000 lignes | valides : 3,769,383 | invalides : 30,617 | débit : 59,422 lignes/s
+Force brute détectée depuis 10.0.0.5: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.68: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.22: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.16: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.77: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.38: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.92: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.30: 3 échecs consécutifs
+Progression : 3,900,000 lignes | valides : 3,868,633 | invalides : 31,367 | débit : 59,367 lignes/s
+Force brute détectée depuis 172.16.0.1: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.71: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.47: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.23: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.75: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.28: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.51: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.48: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.26: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.11: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.6: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.49: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.22: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.4: 3 échecs consécutifs
+Progression : 4,000,000 lignes | valides : 3,967,787 | invalides : 32,213 | débit : 59,359 lignes/s
+Force brute détectée depuis 10.0.0.30: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.13: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.13: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.56: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.57: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.17: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.7: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.49: 3 échecs consécutifs
+Progression : 4,100,000 lignes | valides : 4,067,030 | invalides : 32,970 | débit : 59,393 lignes/s
+Force brute détectée depuis 192.168.1.97: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.9: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.27: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.29: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.95: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.34: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.88: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.22: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.42: 3 échecs consécutifs
+Progression : 4,200,000 lignes | valides : 4,166,266 | invalides : 33,734 | débit : 59,380 lignes/s
+Force brute détectée depuis 192.168.1.76: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.90: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.24: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.1: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.42: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.36: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.32: 3 échecs consécutifs
+Progression : 4,300,000 lignes | valides : 4,265,450 | invalides : 34,550 | débit : 59,283 lignes/s
+Force brute détectée depuis 172.16.0.9: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.68: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.14: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.19: 3 échecs consécutifs
+Force brute détectée depuis 172.16.0.12: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.80: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.14: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.21: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.10: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.83: 3 échecs consécutifs
+Progression : 4,400,000 lignes | valides : 4,364,654 | invalides : 35,346 | débit : 59,353 lignes/s
+Force brute détectée depuis 10.0.0.44: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.15: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.84: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.15: 3 échecs consécutifs
+Progression : 4,500,000 lignes | valides : 4,463,883 | invalides : 36,117 | débit : 59,339 lignes/s
+Force brute détectée depuis 10.0.0.34: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.22: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.14: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.88: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.35: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.93: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.73: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.36: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.40: 3 échecs consécutifs
+Progression : 4,600,000 lignes | valides : 4,563,078 | invalides : 36,922 | débit : 59,320 lignes/s
+Force brute détectée depuis 10.0.0.12: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.28: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.41: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.35: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.54: 3 échecs consécutifs
+Progression : 4,700,000 lignes | valides : 4,662,300 | invalides : 37,700 | débit : 59,382 lignes/s
+Force brute détectée depuis 192.168.1.7: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.53: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.36: 3 échecs consécutifs
+Progression : 4,800,000 lignes | valides : 4,761,550 | invalides : 38,450 | débit : 59,272 lignes/s
+Force brute détectée depuis 192.168.1.66: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.55: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.41: 3 échecs consécutifs
+Progression : 4,900,000 lignes | valides : 4,860,736 | invalides : 39,264 | débit : 59,294 lignes/s
+Force brute détectée depuis 192.168.1.44: 3 échecs consécutifs
+Force brute détectée depuis 10.0.0.27: 3 échecs consécutifs
+Force brute détectée depuis 192.168.1.27: 3 échecs consécutifs
+Progression : 5,000,000 lignes | valides : 4,959,980 | invalides : 40,020 | débit : 59,366 lignes/s
+
+=== RAPPORT DE CONSOMMATION MÉMOIRE ET PERFORMANCES ===
+ Total de lignes lues   : 5,000,000 lignes
+ Records valides        : 4,959,980
+ Lignes invalides       : 40,020
+ Temps d'exécution      : 84.23 secondes
+ 📈 Pic de RAM (Peak)    : 58.57 Mo
+ 📊 Moyenne de RAM       : 58.04 Mo
+
+=== COMPTAGE PAR CATÉGORIE ET PAR UTILISATEUR ===
+ Par catégorie de log :
+   - http         : 4,320,554
+   - http_error   : 639,426
+ Par niveau de sévérité :
+   - INFO         : 3,828,773
+   - ERROR        : 541,056
+   - WARNING      : 491,781
+   - CRITICAL     : 98,370
+ Utilisateurs distincts : 6
+ Top 5 utilisateurs :
+   - Python-urllib/3.10           : 869,402 (INFO=639,216, ERROR=131,968, WARNING=81,920)
+   - Mozilla/5.0 (Windows NT 1... : 818,489 (INFO=638,522, ERROR=81,761, WARNING=81,649)
+   - Mozilla/5.0 (X11; Linux x... : 818,471 (INFO=638,415, ERROR=82,141, WARNING=81,639)
+   - PostmanRuntime/7.32.3        : 818,005 (INFO=637,958, WARNING=82,063, ERROR=81,572)
+   - curl/7.68.0                  : 817,913 (INFO=637,277, WARNING=82,380, ERROR=81,924)
+
+=== PREMIER EXEMPLE PAR TYPE DE ROUTAGE ===
+ [http] GET /static/js/main.js -> 201
+             {'timestamp': datetime.datetime(2026, 10, 19, 11, 52, 26, tzinfo=datetime.timezone.utc), 'level': 'INFO', 'user': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0', 'payload': '192.168.1.10:30545 - - [19/Oct/2026:11:52:26 +0000] "GET /static/js/main.js HTTP/1.1" 201 450 "https://example.com/products" "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0"', 'ip': '192.168.1.10', 'method': 'GET', 'path': '/static/js/main.js', 'protocol': 'HTTP/1.1', 'status': 201, 'bytes': 450, 'referer': 'https://example.com/products', 'user_agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0', 'connection': ('192.168.1.10', 30545, 'HTTP/1.1')}
+ [http_error] Erreur HTTP 500 sur /api/v1/auth/login
+             {'timestamp': datetime.datetime(2026, 10, 19, 11, 52, 26, tzinfo=datetime.timezone.utc), 'level': 'CRITICAL', 'user': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15', 'payload': '192.168.1.89:55974 - - [19/Oct/2026:11:52:26 +0000] "GET /api/v1/auth/login HTTP/1.1" 500 209 "https://example.com/products" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"', 'ip': '192.168.1.89', 'method': 'GET', 'path': '/api/v1/auth/login', 'protocol': 'HTTP/1.1', 'status': 500, 'bytes': 209, 'referer': 'https://example.com/products', 'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15', 'connection': ('192.168.1.89', 55974, 'HTTP/1.1')}
+ [invalid] Ligne invalide : Ligne vide
+             {'raw_line': '', 'error': 'Ligne vide'}
+
+=== APERÇU DES LIGNES INVALIDES ===
+ Invalide 1 : Ligne invalide : Ligne vide
+             {'raw_line': '', 'error': 'Ligne vide'}
+ Invalide 2 : Ligne invalide : Format de ligne inconnu
+             {'raw_line': 'GET /admin/login HTTP/1.1 401 512', 'error': 'Format de ligne inconnu'}
+ Invalide 3 : Ligne invalide : Ligne vide
+             {'raw_line': '', 'error': 'Ligne vide'}
+
+=== APERÇU DES RECORDS TRAITÉS ===
+ Record 1 : [http] GET /static/js/main.js -> 201
+             {'timestamp': datetime.datetime(2026, 10, 19, 11, 52, 26, tzinfo=datetime.timezone.utc), 'level': 'INFO', 'user': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0', 'payload': '192.168.1.10:30545 - - [19/Oct/2026:11:52:26 +0000] "GET /static/js/main.js HTTP/1.1" 201 450 "https://example.com/products" "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0"', 'ip': '192.168.1.10', 'method': 'GET', 'path': '/static/js/main.js', 'protocol': 'HTTP/1.1', 'status': 201, 'bytes': 450, 'referer': 'https://example.com/products', 'user_agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0', 'connection': ('192.168.1.10', 30545, 'HTTP/1.1')}
+ Record 2 : [http] POST /index.html -> 200
+             {'timestamp': datetime.datetime(2026, 10, 19, 11, 52, 26, tzinfo=datetime.timezone.utc), 'level': 'INFO', 'user': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0', 'payload': '192.168.1.44:47487 - - [19/Oct/2026:11:52:26 +0000] "POST /index.html HTTP/1.1" 200 4507 "https://example.com/login" "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0"', 'ip': '192.168.1.44', 'method': 'POST', 'path': '/index.html', 'protocol': 'HTTP/1.1', 'status': 200, 'bytes': 4507, 'referer': 'https://example.com/login', 'user_agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0', 'connection': ('192.168.1.44', 47487, 'HTTP/1.1')}
+ Record 3 : [http] GET / -> 201
+             {'timestamp': datetime.datetime(2026, 10, 19, 11, 52, 26, tzinfo=datetime.timezone.utc), 'level': 'INFO', 'user': 'PostmanRuntime/7.32.3', 'payload': 'time="2026-10-19 11:52:26" client_ip=10.0.0.38 client_port=56516 method=GET path="/" status=201 bytes=314 duration_ms=333 agent="PostmanRuntime/7.32.3"', 'ip': '10.0.0.38', 'method': 'GET', 'path': '/', 'protocol': 'HTTP/1.1', 'status': 201, 'bytes': 314, 'referer': '-', 'user_agent': 'PostmanRuntime/7.32.3', 'connection': ('10.0.0.38', 56516, 'HTTP/1.1'), 'duration_ms': 333}
+=======================================================
+
+=== RAPPORT FORCE BRUTE ===
+ Alertes détectées : 361
+ Rapport écrit dans : /home/enrike/Desktop/Cours/ECE/Python/log-analysis/brute_force/brute_force_report.txt
+
+=== ANALYSE DES ADRESSES IP (set / frozenset) ===
+ Records valides avec IP                     : 4,959,980 dont 639,426 en ERROR/CRITICAL
+ IP actives (uniques)                        : 179 [set]
+      10.0.0.1, 10.0.0.2, 10.0.0.3, ... (+176)
+ IP ayant généré des erreurs                 : 179 [set]
+      10.0.0.1, 10.0.0.2, 10.0.0.3, ... (+176)
+ IP blacklistées                             :   5 [frozenset]
+      10.0.0.99, 172.16.0.4, 192.168.1.66, ... (+2)
+ IP blacklistées qui ont contacté le serveur :   3
+      10.0.0.99, 172.16.0.4, 192.168.1.66
+ IP blacklistées restées silencieuses        :   2
+      198.51.100.23, 203.0.113.7
+ IP actives non blacklistées                 : 176
+      10.0.0.1, 10.0.0.2, 10.0.0.3, ... (+173)
+ Toutes les IP blacklistées ou observées     : 181
+      10.0.0.1, 10.0.0.2, 10.0.0.3, ... (+178)
+ Différence symétrique (blacklist ^ actives) : 178
+      10.0.0.1, 10.0.0.2, 10.0.0.3, ... (+175)
+ IP blacklistées ayant généré des erreurs    :   3
+      10.0.0.99, 172.16.0.4, 192.168.1.66
+
+Rapport IP enregistré dans : /home/enrike/Desktop/Cours/ECE/Python/log-analysis/reports/ip_report.txt
