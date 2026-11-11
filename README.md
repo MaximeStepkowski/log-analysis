@@ -47,6 +47,24 @@ Le projet est découpé en 4 modules principaux respectant les prérequis d'opti
 
 ---
 
+## Le menu CLI
+
+Afin de simplifier l'utilisation du projet, une application CLI écrite en Python afin de respecter la structure du projet est disponible via l'invite de commande. Le menu interactif se lance depuis la racine du projet :
+
+```bash
+python log_analysis.py
+```
+
+Celui-ci permet de sélectionner:
+
+- La génération de logs
+- L'analyse de logs
+- La lecture des derniers rapports d'analyse
+
+La génération de logs et l'analyse de logs ayant plusieurs paramètres, l'invite de commande vous donnera donc la possibilité d'entrer des valeurs ou de choisir celle par défaut. Les valeurs interdites sont automatiquement refusées et permettent d'écrire à nouveau le résultat.
+
+Concernant la liste des rapports, ils s'adapte à la taille de votre invite de commande. Plus il est grand, moins il y aura de pages affichés pour le rapports. La navigation est rendu simple avec la possibilité d'aller à la page suivante ou la page précédente grâce aux flèches gauche `←` et droite `→` et de revenir au menu précédent à tout moment avec `q`
+
 ## 📂 Structure du Projet
 
 ## 🚀 Installation et utilisation
@@ -245,4 +263,3 @@ Vérifier le respect de la norme PEP 8 :
 ```bash
 pycodestyle --max-line-length=88 main.py log_engine log_generator log_transformation
 ```
-
