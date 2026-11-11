@@ -4,19 +4,11 @@ Measure peak RAM and calculate average memory usage.
 """
 
 import argparse
-import ctypes
-import os
 import sys
 import time
 from pathlib import Path
 
 from log_engine.aggregation import CountReport, most_common
-
-try:
-    import resource
-except ImportError:  # pragma: no cover - disponible sous Unix uniquement
-    resource = None
-
 from log_engine.ingestion import read_logs_from_directory
 from log_engine.memory import get_current_memory_bytes, get_peak_memory_bytes
 from log_engine.parsing import parse_logs_parallel
@@ -38,64 +30,6 @@ from security import (
     rule_http_errors,
 )
 from security.report import write_security_report
-
-
-if sys.platform == "win32":
-    class MemoryCounters(ctypes.Structure):
-        _fields_ = [
-            ("cb", ctypes.c_ulong),
-            ("PageFaultCount", ctypes.c_ulong),
-            ("PeakWorkingSetSize", ctypes.c_size_t),
-            ("WorkingSetSize", ctypes.c_size_t),
-            ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
-            ("QuotaPagedPoolUsage", ctypes.c_size_t),
-            ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
-            ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
-            ("PagefileUsage", ctypes.c_size_t),
-            ("PeakPagefileUsage", ctypes.c_size_t),
-        ]
-
-
-def get_windows_memory() -> tuple[int, int]:
-    """Retourne le RSS courant et le pic RSS sous Windows."""
-    counters = MemoryCounters()
-    counters.cb = ctypes.sizeof(counters)
-    process = ctypes.windll.kernel32.GetCurrentProcess()
-    success = ctypes.windll.psapi.GetProcessMemoryInfo(
-        process,
-        ctypes.byref(counters),
-        counters.cb,
-    )
-    if not success:
-        return 0, 0
-    return counters.WorkingSetSize, counters.PeakWorkingSetSize
-
-
-def get_current_memory_bytes() -> int:
-    """Return the process's current resident memory."""
-    if sys.platform == "win32":
-        return get_windows_memory()[0]
-
-    try:
-        with open("/proc/self/statm", encoding="ascii") as statm_file:
-            resident_pages = int(statm_file.readline().split()[1])
-        return resident_pages * os.sysconf("SC_PAGE_SIZE")
-    except (OSError, IndexError, ValueError):
-        return 0
-
-
-def get_peak_memory_bytes() -> int:
-    """Return the peak RSS in bytes for the current operating system."""
-    if sys.platform == "win32":
-        return get_windows_memory()[1]
-
-    if resource is None:
-        return 0
-
-    peak_memory = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    if sys.platform == "linux":
-        return peak_memory * 1024
-    return peak_memory
 
 
 def format_count_report(report: CountReport) -> str:
@@ -221,6 +155,7 @@ def main() -> None:
     parser.add_argument(
         "--security-report",
         type=Path,
+        default=Path(__file__).resolve().parent / "reports" / "security_report.txt",
         help="Rapport texte des règles de sécurité et de l'audit.",
     )
     parser.add_argument(
