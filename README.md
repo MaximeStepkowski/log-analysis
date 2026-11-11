@@ -1,256 +1,181 @@
-# Secure Log Stream Engine - Plateforme d'Analyse de Logs en Temps Réel
-
+# Secure Log Stream Engine
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Project Level](https://img.shields.io/badge/Level-ING3-orange.svg)]()
 [![Code Style](https://img.shields.io/badge/code%20style-PEP8-green.svg)](https://peps.python.org/pep-0008/)
 
-## 📝 Description du Projet
+## Présentation
 
-**Secure Log Stream Engine** est une plateforme en ligne de commande (CLI) conçue pour l'ingestion, la transformation, l'analyse et la sécurisation en temps réel de journaux de logs volumineux. 
+**Secure Log Stream Engine** est une application Python en ligne de commande
+permettant de générer, ingérer, transformer et analyser des fichiers de logs
+HTTP. Elle a été conçue dans le cadre du cursus ING3 avec un objectif central :
+traiter de gros volumes de données en limitant l'empreinte mémoire.
 
-Développé dans le cadre du cursus **ING3**, ce projet répond à une contrainte majeure d'ingénierie : **traiter plusieurs millions de lignes de données système/réseau avec une empreinte mémoire (RAM) minimale et constante**. L'architecture s'appuie sur la programmation fonctionnelle, les générateurs Python et un moteur de règles d'audit modulaire.
+Le pipeline lit les fichiers progressivement grâce aux générateurs Python,
+parse et normalise les entrées, puis produit des statistiques et des rapports
+de sécurité. Il permet notamment de :
 
----
+- compter les logs par catégorie, niveau de sévérité et utilisateur ;
+- suivre les adresses IP actives, les IP en erreur et les IP blacklistées ;
+- détecter les échecs de connexion consécutifs correspondant à une attaque par
+  force brute ;
+- mesurer le temps d'exécution et, sur demande, la consommation mémoire ;
+- appliquer des règles de sécurité extensibles et exporter un rapport d'audit.
 
-## 👥 Équipe de Développement
+## Membres
 
-Projet réalisé en trinôme par :
-* **STEPKOWSKI Maxime** 
-* **CHAMPION Enrike**
-* **MASSION Côme** 
----
+Projet réalisé par :
 
-## ⚙️ Architecture & Modules Techniques
+- **STEPKOWSKI Maxime**
+- **CHAMPION Enrike**
+- **MASSION Côme**
 
-Le projet est découpé en 4 modules principaux respectant les prérequis d'optimisation et d'isolation :
+## Architecture et modules techniques
 
-### 1. Ingestion de Données & Générateurs Mémoire (`Module 1`)
-* **Flux continu sans surcharge RAM** : Utilisation de générateurs `yield` pour lire les logs ligne par ligne à la demande.
-* **Agrégation de sources multiples** : Sous-générateurs exploitant `yield from` pour chaîner la lecture de plusieurs fichiers.
-* **Parsing & Modélisation** : Structuration sous forme de dictionnaires avec typage fort (horodatage, niveau de sévérité `INFO`/`WARNING`/`ERROR`/`CRITICAL`, IP source, utilisateur, payload).
-* **Immutabilité** : Métadonnées réseau fixes modélisées sous forme de Tuples `(IP, Port, Protocole)`.
+Le projet est organisé en modules indépendants reliés par un pipeline de
+traitement :
 
-### 2. Pipeline de Transformation & Programmation Fonctionnelle (`Module 2`)
-* **Filtrage Intelligent** : Utilisation de `filter()` et d'expressions `lambda` pour écarter les requêtes invalides ou nettoyer les lignes vides/corrompues.
-* **Normalisation** : Application de `map()` pour le nettoyage des chaînes, la conversion de casse et le reformatage via f-strings.
-* **Structural Pattern Matching** : Routage dynamique des entrées via `match-case` (gestion des chaînes brutes, dictionnaires et tuples de connexion).
+### Ingestion et parsing
 
-### 3. Agrégation & Détection d'Attaques (`Module 3`)
-* **Opérations sur Ensembles** : Utilisation de `set` et de `frozenset` immuables pour identifier les IP uniques en erreur et exécuter des opérations d'ensembles (`|`, `&`, `-`, `^`) avec des listes d'IP blacklistées.
-* **Accumulation Dynamique** : Dénombrement par catégorie via `collections.defaultdict` afin d'éviter les `KeyError`.
-* **Détection Brute-Force** : Algorithme de détection d'échecs de connexion consécutifs combinant des boucles `while`/`for` enrichies de la clause `else`.
+Le package `log_engine` lit les fichiers du dossier `logs/` sous forme de flux
+et les convertit en enregistrements structurés. Les générateurs (`yield` et
+`yield from`) évitent de charger tous les fichiers en mémoire. Le parsing peut
+être exécuté par plusieurs processus grâce à `--workers` et `--batch-size`.
 
-### 4. Moteur de Règles & Introspection Dynamique (`Module 4`)
-* **Flexible Rule Engine** : Moteur de sécurité configurable basé sur la fonction maître `apply_security_rules(*args, **kwargs)` traitant les fonctions comme des objets de première classe.
-* **Audit Système & Introspection** : Export d'un rapport sur les variables de portée actuellement chargées en mémoire à l'aide des fonctions `globals()` et `locals()`.
-* **Rapport CLI** : Les règles IP blacklistée, erreurs HTTP répétées et force brute peuvent être exportées dans un rapport texte.
+### Transformation et routage
 
----
+Le package `log_transformation` filtre les entrées invalides, normalise les
+valeurs et conserve des exemples du traitement. Le routage des différents
+formats d'enregistrements s'appuie sur le pattern matching `match/case`.
 
-## Le menu CLI
+### Agrégation et analyse IP
 
-Afin de simplifier l'utilisation du projet, une application CLI écrite en Python afin de respecter la structure du projet est disponible via l'invite de commande. Le menu interactif se lance depuis la racine du projet :
+Le package `log_engine.aggregation` calcule les compteurs par catégorie,
+niveau et utilisateur. Le package `log_processing` utilise des `set` et des
+`frozenset` pour comparer les IP observées avec `data/blacklist.txt` et
+produire un rapport complet.
+
+### Détection de force brute
+
+Le module `log_process.brute_force` recherche, pour chaque IP, au moins trois
+échecs de connexion consécutifs (`401` ou `403`). Les alertes peuvent être
+détectées pendant l'analyse principale ou via la CLI dédiée.
+
+### Moteur de sécurité et audit
+
+Le package `security` regroupe les règles de détection d'IP blacklistées,
+d'erreurs HTTP répétées et de force brute. Les règles sont passées au moteur
+comme des fonctions, ce qui facilite leur extension. Un rapport texte peut
+également contenir un audit des noms et types de variables inspectées, sans
+exporter leurs valeurs.
+
+## Menu CLI
+
+Le menu interactif se lance depuis la racine du projet :
 
 ```bash
 python log_analysis.py
 ```
 
-Celui-ci permet de sélectionner:
+Il propose les actions suivantes :
 
-- La génération de logs
-- L'analyse de logs
-- La lecture des derniers rapports d'analyse
+1. **Générer des logs** : choisir le nombre de fichiers, le nombre de lignes,
+   la cadence, la taille des lots et le dossier de sortie.
+2. **Lancer l'application principale** : choisir le nombre de processus et
+   activer ou non le suivi détaillé de la mémoire.
+3. **Lire les rapports** : sélectionner un rapport texte disponible dans
+   `reports/` et le consulter page par page.
+0. **Quitter**.
 
-La génération de logs et l'analyse de logs ayant plusieurs paramètres, l'invite de commande vous donnera donc la possibilité d'entrer des valeurs ou de choisir celle par défaut. Les valeurs interdites sont automatiquement refusées et permettent d'écrire à nouveau le résultat.
+Dans la vue des rapports, les flèches gauche et droite changent de page et
+`q` revient au menu précédent.
 
-Concernant la liste des rapports, ils s'adapte à la taille de votre invite de commande. Plus il est grand, moins il y aura de pages affichés pour le rapports. La navigation est rendu simple avec la possibilité d'aller à la page suivante ou la page précédente grâce aux flèches gauche `←` et droite `→` et de revenir au menu précédent à tout moment avec `q`
+## Structure du projet
 
-## 📂 Structure du Projet
+```text
+log-analysis/
+├── data/
+│   └── blacklist.txt              # IP blacklistées
+├── log_engine/                    # ingestion, parsing, mémoire, agrégation
+├── log_generator/                 # génération d'un ou plusieurs fichiers
+├── log_process/                   # détection de force brute et CLI associée
+├── log_processing/                # collecte et comparaison des adresses IP
+├── log_transformation/            # filtrage, normalisation et suivi
+├── security/                      # règles, moteur et rapports de sécurité
+├── logs/                          # fichiers de logs générés
+├── reports/                       # rapports produits à l'exécution
+├── tests/                         # tests unitaires
+├── log_analysis.py                # menu interactif
+├── main.py                        # pipeline d'analyse principal
+├── requirements.txt               # dépendances du projet
+└── README.md
+```
 
-## 🚀 Installation et utilisation
+## Installation
 
 Les commandes suivantes doivent être exécutées depuis la racine du projet.
 
-### Bash (Linux/macOS)
-
-Créer et activer l'environnement virtuel :
+### Linux et macOS
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Générer un fichier contenant 1 000 lignes :
-
-```bash
-python -m log_generator.generate_logs --lines 1000 --number 1
-```
-
-Générer plusieurs fichiers :
-
-```bash
-python -m log_generator.generate_multiple_logs \
-	--files 3 \
-	--lines 1000 \
-	--output-dir logs
-```
-
-Le débit temporel est choisi automatiquement et reste identique pour la série
-de fichiers, afin que leur durée soit proportionnelle au nombre de lignes.
-
-Lancer l'analyse :
-
-```bash
-python main.py
-python main.py --memory
-python main.py --workers 4
-python main.py --memory --workers 4
-```
-
-Une taille de lot de 5 000 lignes est utilisée par défaut pour le parsing
-parallèle. Elle peut être ajustée avec `--batch-size`.
-
-Pour supprimer les messages de progression intermédiaires :
-
-```fish
-python main.py --workers 8 --batch-size 5000 --quiet
-```
-
-### Fish
-
-Créer et activer l'environnement virtuel :
-
-```fish
-python3 -m venv .venv
-source .venv/bin/activate.fish
-pip install -r requirements.txt
-```
-
-Générer un fichier contenant 1 000 lignes :
-
-```fish
-python -m log_generator.generate_logs --lines 1000 --number 1
-```
-
-Générer plusieurs fichiers :
-
-```fish
-python -m log_generator.generate_multiple_logs \
-	--files 3 \
-	--lines 1000 \
-	--output-dir logs
-```
-
-Le débit temporel est choisi automatiquement et reste identique pour la série
-de fichiers, afin que leur durée soit proportionnelle au nombre de lignes.
-
-Lancer l'analyse :
-
-```fish
-python main.py
-python main.py --memory
-python main.py --workers 4
-python main.py --memory --workers 4
-```
-
-`main.py` lance également la détection brute force pendant le parsing déjà
-effectué. Les logs ne sont donc pas relus une seconde fois. Le rapport est
-écrit par défaut dans `reports/brute_force_report.txt`. Pour choisir un
-autre fichier :
-
-```fish
-python main.py --brute-force-output reports/mon_rapport.txt
-```
-
-Lancer la détection des attaques par force brute :
-
-```fish
-python -m log_process.brute_force_cli
-```
-
-La commande analyse les fichiers `.log` du dossier `logs/`. Elle détecte les
-adresses IP ayant au moins trois échecs de connexion consécutifs (`401` ou
-`403`) et affiche les alertes dans le terminal. Le rapport est également
-enregistré dans `reports/brute_force_report.txt`.
-
-Options disponibles :
-
-```fish
-python -m log_process.brute_force_cli --help
-python -m log_process.brute_force_cli --directory autre_dossier
-python -m log_process.brute_force_cli --pattern "*.log"
-python -m log_process.brute_force_cli --output reports/mon_rapport.txt
-```
-
-Générer le rapport de sécurité du module 4 :
-
-```fish
-python main.py --security-report reports/security_report.txt
-```
-
-Le rapport contient les règles déclenchées, leurs détails et l'audit des noms
-et types de variables des portées inspectées. Les valeurs des variables ne sont
-pas exportées.
-
-### Windows PowerShell
-
-Créer et activer l'environnement virtuel :
-
-```powershell
-py -3 -m venv .venv
-.\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 ```
 
-Générer un fichier contenant 1 000 lignes :
+### Windows PowerShell
 
 ```powershell
+py -3 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+Python 3.10 ou une version ultérieure est recommandée. Le fichier
+`requirements.txt` contient notamment `pytest` pour exécuter les tests.
+
+## Utilisation en ligne de commande
+
+Générer un fichier de 1 000 lignes :
+
+```bash
 python -m log_generator.generate_logs --lines 1000 --number 1
 ```
 
-Générer plusieurs fichiers :
+Générer plusieurs fichiers dans `logs/` :
 
-```powershell
-python -m log_generator.generate_multiple_logs `
-	--files 3 `
-	--lines 1000 `
-	--output-dir logs
+```bash
+python -m log_generator.generate_multiple_logs \
+  --files 3 \
+  --lines 1000 \
+  --output-dir logs
 ```
 
-Le débit temporel est choisi automatiquement et reste identique pour la série
-de fichiers, afin que leur durée soit proportionnelle au nombre de lignes.
+Lancer l'analyse principale :
 
-Lancer l'analyse :
-
-```powershell
+```bash
 python main.py
-python main.py --memory
-python main.py --workers 4
-python main.py --memory --workers 4
+python main.py --memory --workers 4 --batch-size 5000
 ```
 
-Sous `cmd.exe`, l'activation du venv se fait avec :
+Options utiles :
 
-```bat
-.venv\Scripts\activate.bat
-```
+- `--memory` active le suivi de la mémoire ;
+- `--workers N` définit le nombre de processus de parsing ;
+- `--batch-size N` définit la taille des lots ;
+- `--quiet` masque les messages de progression ;
+- `--ip-report-output chemin` choisit le rapport IP ;
+- `--brute-force-output chemin` choisit le rapport force brute ;
+- `--security-report chemin` active l'export du rapport de sécurité.
 
-### Options et vérifications
-
-Afficher les options disponibles :
+Détecter séparément les attaques par force brute :
 
 ```bash
-python -m log_generator.generate_logs --help
-python -m log_generator.generate_multiple_logs --help
-python main.py --help
+python -m log_process.brute_force_cli
+python -m log_process.brute_force_cli --directory autre_dossier
+python -m log_process.brute_force_cli --pattern "*.log" --output reports/mon_rapport.txt
 ```
 
-Vérifier la syntaxe Python :
-
-```bash
-python -m compileall -q .
-```
+## Vérification
 
 Exécuter les tests unitaires :
 
@@ -258,8 +183,17 @@ Exécuter les tests unitaires :
 python -m pytest
 ```
 
-Vérifier le respect de la norme PEP 8 :
+Vérifier la syntaxe de l'ensemble du projet :
 
 ```bash
-pycodestyle --max-line-length=88 main.py log_engine log_generator log_transformation
+python -m compileall -q .
+```
+
+Afficher l'aide des différentes commandes :
+
+```bash
+python main.py --help
+python -m log_generator.generate_logs --help
+python -m log_generator.generate_multiple_logs --help
+python -m log_process.brute_force_cli --help
 ```

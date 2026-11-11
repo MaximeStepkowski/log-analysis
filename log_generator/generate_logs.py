@@ -29,9 +29,11 @@ def get_output_file(
 
 # --- HTTP DATASETS ---
 IP_POOL = (
-    [f"192.168.1.{i}" for i in range(1, 100)]
-    + [f"10.0.0.{i}" for i in range(1, 50)]
-    + [f"172.16.0.{i}" for i in range(1, 30)]
+    [
+        *[f"192.168.1.{i}" for i in range(1, 100)],
+        *[f"10.0.0.{i}" for i in range(1, 50)],
+        *[f"172.16.0.{i}" for i in range(1, 30)],
+    ]
 )
 BLACKLISTED_IPS = ["192.168.1.66", "10.0.0.99", "172.16.0.4"]
 ALL_IPS = IP_POOL + BLACKLISTED_IPS
@@ -172,7 +174,6 @@ def generate_http_log_line(
             f'"{method} {endpoint} {http_version}" {status} '
             f'{bytes_sent} "{referer}" "{user_agent}"'
         )
-
 
     elif format_type == "json":
         # Structured JSON format for Kibana / Loki

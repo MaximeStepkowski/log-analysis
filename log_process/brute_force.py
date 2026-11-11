@@ -176,4 +176,3 @@ def detect_brute_force_from_directory(
     return detect_brute_force(
         read_logs_from_directory(Path(directory), pattern), threshold=threshold
     )
-

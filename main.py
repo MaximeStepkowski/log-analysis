@@ -213,9 +213,9 @@ def main() -> None:
     parser.add_argument(
         "--brute-force-output",
         type=Path,
-        default=Path(__file__).resolve().parent
-        / "reports"
-        / "brute_force_report.txt",
+        default=Path(__file__).resolve().parent.joinpath(
+            "reports", "brute_force_report.txt"
+        ),
         help="Rapport force brute produit pendant l'analyse.",
     )
     parser.add_argument(
@@ -268,7 +268,7 @@ def main() -> None:
     preview_limit = 3
     tracker = Tracker(sample_size=preview_limit)
     ip_collector = IPCollector()
-    
+
     valid_stream = track_ips(
         filter(lambda record: tracker(record), parsed_stream),
         ip_collector,
